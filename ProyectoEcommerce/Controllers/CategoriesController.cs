@@ -131,5 +131,23 @@ namespace ProyectoEcommerce.Controllers
         {
             return _context.Categories.Any(e => e.CategoryId == id);
         }
+
+
+        // Método para cargar categorías en el menú (API)
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> GetCategoriesForMenu()
+        {
+            var categories = await _context.Categories
+                .OrderBy(c => c.Name)
+                .Select(c => new
+                {
+                    categoryId = c.CategoryId,
+                    name = c.Name
+                })
+                .ToListAsync();
+
+            return Json(categories);
+        }
     }
 }
