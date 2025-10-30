@@ -9,8 +9,11 @@
     <title>@ViewData["Title"] - InnovaTech</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Accessibility.css" asp-append-version="true" />
+
 
     @RenderSection("Styles", required: false)
 </head>
@@ -20,31 +23,36 @@
 
 <body>
     <header>
-        <div class="header-top d-flex align-items-center justify-content-between gap-3 px-3 py-2">
-            <a asp-controller="Home" asp-action="Index" class="logo">
-                <img src="https://i.postimg.cc/K8Kyg8yD/Imagen1.png"
-                     width="320" height="100" alt="logo" style="display:block;" />
-            </a>
+        <div class="header-top d-flex align-items-center gap-4 px-3 py-2">
+            <!-- LOGO - Ancho fijo -->
+            <div class="logo-container" style="width: 320px; flex-shrink: 0;">
+                <a asp-controller="Home" asp-action="Index" class="logo">
+                    <img src="https://i.postimg.cc/K8Kyg8yD/Imagen1.png"
+                         width="320" height="100" alt="logo" style="display:block;" />
+                </a>
+            </div>
 
-            <div class="search-container d-flex gap-2">
+            <!-- BÚSQUEDA - Centrada  -->
+            <div class="search-container d-flex gap-2" style="flex: 1; max-width: 500px; margin: 0 auto;">
                 <input type="text" class="search-bar form-control" placeholder="Buscar productos...">
                 <button class="search-btn btn btn-outline-primary">Buscar</button>
             </div>
 
-            <div class="header-actions d-flex align-items-center gap-2">
-                <!-- Login/Logout/Manage provistos por Identity UI -->
+           
+            <!-- BOTONES - Mismo tamaño y alineados -->
+            <div class="header-actions d-flex align-items-center gap-1" style="width: 300px; flex-shrink: 0; justify-content: flex-end;">
                 <partial name="_LoginPartial" />
 
-                <a href="#" class="header-btn btn btn-link">Favoritos</a>
-                <a href="#" class="header-btn btn btn-link">Carrito <span class="cart-badge badge bg-primary">3</span></a>
+                <a href="#" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
+                    <i class="fas fa-heart" style="font-size: 1.3rem;"></i>
+                </a>
 
-                <!-- Botón Accesibilidad -->
-                <button id="btnAccessibility"
-                        class="accessibility-btn btn btn-outline-secondary"
-                        aria-controls="accessibilityPanel"
-                        aria-expanded="false"
-                        aria-haspopup="dialog">
-                    ♿ Accesibilidad
+                <a href="#" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
+                    <i class="fas fa-shopping-cart" style="font-size: 1.3rem;"></i>
+                </a>
+
+                <button id="btnAccessibility" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
+                    <i class="fas fa-universal-access" style="font-size: 1.3rem;"></i>
                 </button>
             </div>
         </div>

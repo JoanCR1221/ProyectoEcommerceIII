@@ -81,11 +81,11 @@ class ProductDetailsPublic {
                 ${products.map(product => `
                     <div class="col-md-3 mb-4">
                         <div class="card h-100 product-card">
-                            <img src="${product.imageUrl || '/images/no-image.png'}" 
-                                 class="card-img-top" 
-                                 alt="${product.name}"
-                                 style="height: 200px; object-fit: cover;"
-                                 onerror="this.src='/images/no-image.png'">
+                            <img src="${product.imageUrl ? product.imageUrl.replace('~/', '/') : '/images/no-image.png'}" 
+     class="card-img-top" 
+     alt="${product.name}"
+     style="height: 200px; object-fit: cover;"
+     onerror="this.src='/images/no-image.png'">
                             <div class="card-body d-flex flex-column">
                                 <h6 class="card-title">${product.name}</h6>
                                 <p class="card-text text-primary fw-bold mt-auto">₡${product.price.toFixed(2)}</p>

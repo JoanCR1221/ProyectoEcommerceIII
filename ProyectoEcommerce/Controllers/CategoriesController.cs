@@ -32,16 +32,19 @@ namespace ProyectoEcommerce.Controllers
         }
 
         // (Opcional) Detalle público
+      
         [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
             var category = await _context.Categories
+                .Include(c => c.Products)  // Modelos de Productos
                 .FirstOrDefaultAsync(m => m.CategoryId == id);
+
             if (category == null) return NotFound();
 
-            return View(category); // Views/Categories/Details.cshtml (puede ser la misma que ya tienes)
+            return View(category);
         }
 
         // ========= ADMIN (CRUD) =========

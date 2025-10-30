@@ -45,10 +45,11 @@ else
                 <div class="card h-100">
                     <!--  IMAGEN CLICKABLE -->
                     <a asp-action="DetailsPublic" asp-route-id="@p.Id" style="text-decoration: none;">
-                        <img src="@(string.IsNullOrWhiteSpace(p.ImageUrl) ? Url.Content("~/images/no-image.png") : p.ImageUrl)"
+                        <img src="@(string.IsNullOrWhiteSpace(p.ImageUrl) ? Url.Content("~/images/no-image.png") : Url.Content(p.ImageUrl))"
                              class="card-img-top"
                              alt="@p.Name"
-                             style="cursor: pointer;" />
+                             style="height: 200px; object-fit: cover; cursor: pointer;"
+                             onerror="this.src='@Url.Content("~/images/no-image.png")'" />
                     </a>
                     <div class="card-body d-flex flex-column">
                         <h6 class="card-title mb-1">@p.Name</h6>
