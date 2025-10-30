@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = Model.Name;
+    Layout = "_Layout";
 }
 
 <div class="container mt-4">
@@ -9,11 +10,21 @@
         <!-- Imagen del Producto -->
         <div class="col-md-6">
             <div class="product-image-container text-center">
-                <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/no-image.png" : Model.ImageUrl)"
+                @{
+                    var imagePath = string.IsNullOrEmpty(Model.ImageUrl)
+                    ? "~/images/no-image.png"
+                    : Model.ImageUrl;
+                }
+                <img src="@Url.Content(imagePath)"
                      class="img-fluid rounded shadow"
                      alt="@Model.Name"
                      style="max-height: 400px; object-fit: cover;"
-                     onerror="this.src='/images/no-image.png'" />
+                     onerror="this.src='@Url.Content("~/images/no-image.png")'" />
+
+                <!-- 
+                <div class="alert alert-info mt-2 small">
+                    <strong>Ruta resuelta:</strong> "@Url.Content(imagePath)"
+                </div> -->
             </div>
         </div>
 

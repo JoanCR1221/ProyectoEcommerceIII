@@ -21,7 +21,7 @@ namespace ProyectoEcommerce.Controllers
         {
             var query = _context.Products
                 .Include(p => p.Category)
-                .Where(p => p.Available && p.Stock > 0) // ← Solo disponibles con stock
+                .Where(p => p.Available && p.Stock > 0) // Solo disponibles con stock
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(q))
@@ -84,8 +84,8 @@ namespace ProyectoEcommerce.Controllers
             return Json(relatedProducts);
         }
 
-        // ========= VISTA ADMIN DETAILS (técnica) =========
-        [AllowAnonymous] // ← Mantenemos AllowAnonymous pero con verificación de rol en la vista
+        // ========= VISTA ADMIN DETAILS  =========
+        [AllowAnonymous] 
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -100,10 +100,23 @@ namespace ProyectoEcommerce.Controllers
         }
 
         // ========= ADMIN (CRUD) =========
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? categoryId)  
         {
-            var list = _context.Products.Include(p => p.Category);
-            return View(await list.ToListAsync());
+            var query = _context.Products.Include(p => p.Category).AsQueryable();
+
+            // FILTRAR por categoría..categoryId
+            if (categoryId.HasValue && categoryId > 0)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+                ViewBag.CategoryId = categoryId.Value;
+
+                // Obtener nombre de la categoría para mostrar
+                var category = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.CategoryId == categoryId.Value);
+                ViewBag.CategoryName = category?.Name;
+            }
+
+            return View(await query.ToListAsync());
         }
 
         // GET: Products/Create

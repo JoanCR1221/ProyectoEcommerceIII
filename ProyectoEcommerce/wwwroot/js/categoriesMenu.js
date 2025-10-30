@@ -48,23 +48,22 @@ class CategoriesMenu {
         });
 
         // Agrega separador y link para ver todas
-        this.addViewAllLink();
+        //this.addViewAllLink();
     }
 
-    addViewAllLink() {
-        const divider = document.createElement('li');
-        divider.innerHTML = `<hr class="dropdown-divider">`;
-        this.menuContainer.appendChild(divider);
+   // addViewAllLink() {
+     //   const divider = document.createElement('li');
+       // divider.innerHTML = `<hr class="dropdown-divider">`;
+      //  this.menuContainer.appendChild(divider);
 
-        const viewAll = document.createElement('li');
-        viewAll.innerHTML = `
-            <a class="dropdown-item text-primary fw-bold" 
-               href="/Categories/Public">
-                <i class="fas fa-folder-open"></i> Ver Todas las Categorías
-            </a>
-        `;
-        this.menuContainer.appendChild(viewAll);
-    }
+       // const viewAll = document.createElement('li');
+       // viewAll.innerHTML = `
+        //    <a class="dropdown-item text-primary fw-bold" 
+         //      href="/Categories/Public">
+         //       <i class="fas fa-folder-open"></i> Ver Todas las Categorías
+        //`;
+       // this.menuContainer.appendChild(viewAll);
+   // }
 
     showNoCategories() {
         this.menuContainer.innerHTML = `
