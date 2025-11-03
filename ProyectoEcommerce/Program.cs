@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProyectoEcommerce.Data;
+using ProyectoEcommerce.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,10 +20,7 @@ builder.Services.AddDbContext<ProyectoEcommerceContext>(opciones =>
 //  CONFIGURACIÓN DE IDENTITY CON ROLES 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
-    // Configuración de cuenta
-    options.SignIn.RequireConfirmedAccount = false; // Cambiar a true en producción
-
-    // Configuración de contraseña
+    options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
@@ -44,6 +42,9 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 // SERVICIOS ADICIONALES
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+// Registrar servicio del carrito
+builder.Services.AddScoped<ICartService, CartService>();
 
 // CONSTRUCCIÓN DE LA APLICACIÓN
 var app = builder.Build();
@@ -100,13 +101,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-//ORDEN CRÍTICO: Authentication debe ir ANTES de Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// CONFIGURACIÓN DE RUTAS
-
-// Ruta para áreas (Admin)
 app.MapControllerRoute(
     name: "admin",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
@@ -115,7 +112,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Mapear páginas Razor (Identity)
 app.MapRazorPages();
 
 app.Run();

@@ -42,9 +42,17 @@
                     <i class="fas fa-heart" style="font-size: 1.3rem;"></i>
                 </a>
 
-                <a href="#" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
-                    <i class="fas fa-shopping-cart" style="font-size: 1.3rem;"></i>
-                </a>
+                @* Widget carrito: invoca el ViewComponent creado *@
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    @await Component.InvokeAsync("CartTodo")
+                }
+                else
+                {
+                    <a asp-controller="ShoppingCarts" asp-action="My" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
+                        <i class="fas fa-shopping-cart" style="font-size: 1.3rem;"></i>
+                    </a>
+                }
 
                 <button id="btnAccessibility" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
                     <i class="fas fa-universal-access" style="font-size: 1.3rem;"></i>
@@ -237,5 +245,6 @@
     <script src="~/js/categoriesMenu.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

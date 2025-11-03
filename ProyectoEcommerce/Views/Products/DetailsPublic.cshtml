@@ -1,10 +1,18 @@
 ﻿@model ProyectoEcommerce.Models.Product
 
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
     <div class="row">
+        <!-- Imagen del Producto -->
         <div class="col-md-6">
-        @if (!string.IsNullOrEmpty(Model.ImageUrl))
-        {
-            <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid" />
+            <div class="product-image-container text-center">
+                @{
+                    var imagePath = string.IsNullOrEmpty(Model.ImageUrl)
+                    ? "~/images/no-image.png"
                     : Model.ImageUrl;
                 }
                 <img src="@Url.Content(imagePath)"
@@ -12,11 +20,6 @@
                      alt="@Model.Name"
                      style="max-height: 400px; object-fit: cover;"
                      onerror="this.src='@Url.Content("~/images/no-image.png")'" />
-
-                <!-- 
-                <div class="alert alert-info mt-2 small">
-                    <strong>Ruta resuelta:</strong> "@Url.Content(imagePath)"
-                </div> -->
             </div>
         </div>
 
@@ -67,10 +70,26 @@
                     @if (Model.Available && Model.Stock > 0)
                     {
                         <div class="d-grid gap-2 d-md-flex">
-                            <button class="btn btn-primary btn-lg flex-fill add-to-cart"
-                                    data-product-id="@Model.Id">
-                                <i class="fas fa-cart-plus"></i> Agregar al Carrito
-                            </button>
+                            <form asp-controller="ShoppingCarts" asp-action="AddToCart" method="post" class="d-flex align-items-center gap-2 p-0 m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <input type="hidden" name="returnUrl" value="@Url.Action("DetailsPublic", "Products", new { id = Model.Id })" />
+
+                                <div class="input-group" style="width:130px;">
+                                    <input type="number"
+                                           name="quantity"
+                                           class="form-control"
+                                           value="1"
+                                           min="1"
+                                           max="@Model.Stock"
+                                           aria-label="Cantidad" />
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-lg flex-fill">
+                                    <i class="fas fa-cart-plus"></i> Agregar al Carrito
+                                </button>
+                            </form>
+
                             <button class="btn btn-outline-secondary btn-lg">
                                 <i class="fas fa-heart"></i> Favorito
                             </button>
