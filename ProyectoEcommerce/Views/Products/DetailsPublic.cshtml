@@ -1,18 +1,10 @@
 ﻿@model ProyectoEcommerce.Models.Product
 
-@{
-    ViewData["Title"] = Model.Name;
-    Layout = "_Layout";
-}
-
-<div class="container mt-4">
     <div class="row">
-        <!-- Imagen del Producto -->
         <div class="col-md-6">
-            <div class="product-image-container text-center">
-                @{
-                    var imagePath = string.IsNullOrEmpty(Model.ImageUrl)
-                    ? "~/images/no-image.png"
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid" />
                     : Model.ImageUrl;
                 }
                 <img src="@Url.Content(imagePath)"
