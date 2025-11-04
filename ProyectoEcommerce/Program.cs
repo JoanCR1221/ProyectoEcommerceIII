@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProyectoEcommerce.Data;
 using ProyectoEcommerce.Services;
+using System.Threading.Channels;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//CONFIGURACIÓN DE LA BASE DE DATOS
 builder.Services.AddDbContext<ProyectoEcommerceContext>(opciones =>
     opciones.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -17,7 +17,7 @@ builder.Services.AddDbContext<ProyectoEcommerceContext>(opciones =>
                 errorNumbersToAdd: null);
         }));
 
-//  CONFIGURACIÓN DE IDENTITY CON ROLES 
+//  CONFIGURACI?N DE IDENTITY CON ROLES 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -27,35 +27,46 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
 
-    // Configuración de bloqueo
+    // Configuraci?n de bloqueo
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 
-    // Configuración de usuario
+    // Configuraci?n de usuario
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<ProyectoEcommerceContext>()
 .AddDefaultTokenProviders()
 .AddDefaultUI();
 
-// SERVICIOS ADICIONALES
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.Name = ".ProyectoEcommerce.Session";
+});
+
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 // Registrar servicio del carrito
 builder.Services.AddScoped<ICartService, CartService>();
 
-// CONSTRUCCIÓN DE LA APLICACIÓN
+// CONSTRUCCI?N DE LA APLICACI?N
 var app = builder.Build();
 
-// INICIALIZACIÓN DE BASE DE DATOS Y ROLES
+// INICIALIZACI?N DE BASE DE DATOS Y ROLES
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
     try
     {
+
         // 1. Aplicar migraciones pendientes
         var context = services.GetRequiredService<ProyectoEcommerceContext>();
         await context.Database.MigrateAsync();
@@ -69,7 +80,27 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine("Advertencia: Hay cambios pendientes en el modelo. Ejecuta 'dotnet ef migrations add [NombreMigracion]'");
     }
-    catch (Exception ex)
+    catch (Exception ex) { 
+
+        db.Database.Migrate();
+    }
+    catch (InvalidOperationException ex) when (ex.Message.Contains("pending changes"))
+    {
+        Console.WriteLine("Advertencia: Hay cambios pendientes en el modelo. Ejecuta 'Add-Migration'.");
+    }
+
+    var roles = sp.GetRequiredService<RoleManager<IdentityRole>>();
+    var users = sp.GetRequiredService<UserManager<IdentityUser>>();
+
+    const string ADMIN = "Admin";
+    if (!await roles.RoleExistsAsync(ADMIN))
+        await roles.CreateAsync(new IdentityRole(ADMIN));
+
+    var email = "admin@demo.com";
+    var pass = "Admin123!";
+    var admin = await users.FindByEmailAsync(email);
+    if (admin == null)
+
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Error al inicializar la base de datos");
@@ -83,9 +114,9 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// CONFIGURACIÓN DEL PIPELINE HTTP
+// CONFIGURACI?N DEL PIPELINE HTTP
 
-// Configurar manejo de errores según el entorno
+// Configurar manejo de errores seg?n el entorno
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -96,10 +127,11 @@ else
     app.UseHsts();
 }
 
-// Middleware básico
+// Middleware b?sico
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -108,9 +140,29 @@ app.MapControllerRoute(
     name: "admin",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
+
+// USO DE SESI?N
+app.UseSession();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+
+app.UseSession();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+
 
 app.MapRazorPages();
 

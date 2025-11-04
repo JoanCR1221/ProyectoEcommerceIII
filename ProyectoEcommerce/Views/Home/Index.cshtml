@@ -9,20 +9,7 @@
 }
 
 
-@section Scripts {
-    <!-- API Key CORREGIDA y optimizada -->
-    <script>
-        function loadGoogleMaps() {
-            const script = document.createElement('script');
-                    @*script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyASg-6uv9BAJVu5haLhf3iimD8X1Xhnaas&callback=initMap';*@
-            script.async = true;
-            script.defer = true;
-            document.head.appendChild(script);
-        }
-        window.onload = loadGoogleMaps;
-    </script>
-    <script src="~/js/maps.js" asp-append-version="true"></script>
-}
+
 
 
 
@@ -105,8 +92,8 @@
             </div>
         }
     </div>
-        }
-    </div>
+        
+    
 
 </main>
 
@@ -167,7 +154,7 @@
 
 
 <!-- Mapa + Sucursales -->
-<section class="map-branches container" aria-label="Mapa y sucursales">
+@* <section class="map-branches container" aria-label="Mapa y sucursales">
     <h2 class="section-title">ENCUÉNTRANOS</h2>
 
     <div class="map-branches-grid">
@@ -246,7 +233,7 @@
             </div>
         </aside>
     </div>
-</section>
+</section>*@
 
 
 
