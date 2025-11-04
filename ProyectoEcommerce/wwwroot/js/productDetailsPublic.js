@@ -14,12 +14,23 @@ class ProductDetailsPublic {
     }
 
     setupAddToCart() {
-        const addToCartBtn = document.querySelector('.add-to-cart');
-        if (addToCartBtn) {
-            addToCartBtn.addEventListener('click', () => {
-                this.addToCart(this.productId);
+        const addToCartForms = document.querySelectorAll('.add-to-cart-form');
+
+        addToCartForms.forEach(form => {
+            form.addEventListener('submit', function (e) {
+                const button = this.querySelector('.add-to-cart-btn');
+                const buttonText = button.querySelector('.button-text');
+                const spinner = button.querySelector('.spinner-border');
+
+                // Mostrar loading inmediatamente - el servidor se encargará del resto
+                button.disabled = true;
+                buttonText.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Procesando...';
+                spinner.classList.remove('d-none');
+
+                // Permitir que el formulario se envíe normalmente
+                // El servidor redirigirá al login si es necesario
             });
-        }
+        });
     }
 
     addToCart(productId) {
@@ -146,4 +157,141 @@ document.addEventListener('DOMContentLoaded', function () {
     if (productId && categoryId) {
         window.productDetails = new ProductDetailsPublic(productId, categoryId);
     }
+});
+
+
+
+// Spinner para agregar al carrito con delay
+document.addEventListener('DOMContentLoaded', function () {
+    const addToCartForms = document.querySelectorAll('.add-to-cart-form');
+
+    addToCartForms.forEach(form => {
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault(); // Prevenir envío inmediato
+
+            const button = this.querySelector('.add-to-cart-btn');
+            const buttonText = button.querySelector('.button-text');
+            const spinner = button.querySelector('.spinner-border');
+
+            // Mostrar spinner y deshabilitar botón
+            button.disabled = true;
+            buttonText.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
+            spinner.classList.remove('d-none');
+
+            try {
+                // Delay artificial de 1.5 segundos
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Crear un formulario temporal para enviar los datos
+                const formData = new FormData(this);
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Éxito - mostrar confirmación
+                    buttonText.innerHTML = '<i class="fas fa-check me-1"></i>¡Agregado!';
+                    spinner.classList.add('d-none');
+
+                    // Recargar después de 1 segundo más
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+
+                } else {
+                    throw new Error('Error al agregar al carrito');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                buttonText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
+                spinner.classList.add('d-none');
+
+                // Restaurar después de 2 segundos
+                setTimeout(() => {
+                    resetAddToCartButton(button);
+                }, 2000);
+            }
+        });
+    });
+
+    function resetAddToCartButton(button) {
+        const buttonText = button.querySelector('.button-text');
+        const spinner = button.querySelector('.spinner-border');
+
+        button.disabled = false;
+        buttonText.innerHTML = '<i class="fas fa-cart-plus me-1"></i>Agregar al Carrito';
+        spinner.classList.add('d-none');
+    }
+
+    
+});
+
+
+                // JavaScript para botones "Agregar al Carrito" en favoritos
+document.addEventListener('DOMContentLoaded', function () {
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', async function (e) {
+            e.preventDefault();
+
+            const productId = this.getAttribute('data-product-id');
+            const buttonText = this.querySelector('.button-text');
+            const spinner = this.querySelector('.spinner-border');
+
+            // Verificar que existan los elementos
+            if (!buttonText || !spinner) {
+                console.error('No se encontraron los elementos del spinner');
+                return;
+            }
+
+            // Mostrar spinner y deshabilitar botón
+            this.disabled = true;
+            buttonText.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
+            spinner.classList.remove('d-none');
+
+            try {
+                // Delay de 1.5 segundos
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Obtener el token anti-forgery
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                const response = await fetch('/ShoppingCarts/AddToCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        productId: parseInt(productId),
+                        quantity: 1
+                    })
+                });
+
+                if (response.ok) {
+                    buttonText.innerHTML = '<i class="fas fa-check me-1"></i>¡Agregado!';
+                    spinner.classList.add('d-none');
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                buttonText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
+                spinner.classList.add('d-none');
+                
+                setTimeout(() => {
+                    this.disabled = false;
+                    buttonText.innerHTML = '<i class="fas fa-cart-plus me-1"></i>Agregar al Carrito';
+                }, 2000);
+            }
+        });
+    });
 });
