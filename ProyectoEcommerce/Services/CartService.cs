@@ -123,7 +123,7 @@ namespace ProyectoEcommerce.Services
                     var buy = new Buy
                     {
                         CustomerId = customer.CustomerId,
-                        EmployeeId = _context.Employees.Select(e => (int?)e.EmployeeId).FirstOrDefault(),
+                        EmployeeId = _context.Employees.Select(e => (int)e.EmployeeId).FirstOrDefault(),
                         Fecha = DateTime.UtcNow,
                         Subtotal = subtotal,
                         IVA = iva,

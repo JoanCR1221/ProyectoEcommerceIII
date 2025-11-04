@@ -64,13 +64,13 @@
                     @if (Model.Available && Model.Stock > 0)
                     {
                         <div class="d-grid gap-2 d-md-flex">
-<<<<<<< Updated upstream
+
                             <button class="btn btn-primary btn-lg flex-fill add-to-cart"
                                     data-product-id="@Model.Id">
                                 <i class="fas fa-cart-plus"></i> Agregar al Carrito
                             </button>
                             <button class="btn btn-outline-secondary btn-lg">
-=======
+
                             <form asp-controller="ShoppingCarts" asp-action="AddToCart" method="post"
                                   class="d-flex align-items-center gap-2 p-0 m-0 add-to-cart-form">
                                 @Html.AntiForgeryToken()
@@ -98,7 +98,7 @@
                             </form>
 
                             <button class="btn btn-outline-secondary btn-lg favorite-btn" data-product-id="@Model.Id" title="Agregar a favoritos">
->>>>>>> Stashed changes
+
                                 <i class="fas fa-heart"></i> Favorito
                             </button>
                         </div>

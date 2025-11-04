@@ -231,7 +231,7 @@ namespace ProyectoEcommerce.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<int>("EmployeeId")
+                    b.Property<int?>("EmployeeId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
@@ -240,6 +240,9 @@ namespace ProyectoEcommerce.Migrations
                     b.Property<decimal>("IVA")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("Paid")
+                        .HasColumnType("bit");
 
                     b.Property<decimal>("Subtotal")
                         .HasPrecision(18, 2)
@@ -255,7 +258,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("Buys");
+                    b.ToTable("Buys", (string)null);
                 });
 
             modelBuilder.Entity("ProyectoEcommerce.Models.BuyItem", b =>
@@ -281,7 +284,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("BuyItems");
+                    b.ToTable("BuyItems", (string)null);
                 });
 
             modelBuilder.Entity("ProyectoEcommerce.Models.Category", b =>
@@ -301,7 +304,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("ProyectoEcommerce.Models.Customer", b =>
@@ -330,7 +333,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasKey("CustomerId");
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("ProyectoEcommerce.Models.Employee", b =>
@@ -359,7 +362,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasKey("EmployeeId");
 
-                    b.ToTable("Employees");
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("ProyectoEcommerce.Models.Faq", b =>
@@ -394,7 +397,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasIndex("Category", "SortOrder");
 
-                    b.ToTable("Faqs");
+                    b.ToTable("Faqs", (string)null);
                 });
 
             modelBuilder.Entity("ProyectoEcommerce.Models.Product", b =>
@@ -432,7 +435,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("ProyectoEcommerce.Models.ShoppingCart", b =>
@@ -453,7 +456,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.ToTable("ShoppingCarts");
+                    b.ToTable("ShoppingCarts", (string)null);
                 });
 
             modelBuilder.Entity("ProyectoEcommerce.Models.ShoppingCartItem", b =>
@@ -474,7 +477,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ShoppingCartItems");
+                    b.ToTable("ShoppingCartItems", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -538,9 +541,7 @@ namespace ProyectoEcommerce.Migrations
 
                     b.HasOne("ProyectoEcommerce.Models.Employee", "Employee")
                         .WithMany("BuysHandled")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("EmployeeId");
 
                     b.Navigation("Customer");
 

@@ -21,6 +21,9 @@ namespace ProyectoEcommerce.Models
         public decimal IVA { get; set; }
         public decimal Total { get; set; }
 
+        public bool Paid { get; set; }  
+
+
         // Propiedades de navegación
         public virtual Customer Customer { get; set; }
         public virtual Employee Employee { get; set; }

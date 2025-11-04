@@ -1,12 +1,16 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProyectoEcommerce.Data;
+using ProyectoEcommerce.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddDbContext<ProyectoEcommerceContext>(opciones =>
     opciones.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ICartService, CartService>();
+
 
 // --- CONFIGURACIÓN ÚNICA de Identity ---
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
