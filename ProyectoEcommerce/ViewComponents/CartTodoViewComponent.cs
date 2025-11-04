@@ -1,3 +1,6 @@
+
+
+
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoEcommerce.Services;
@@ -19,9 +22,8 @@ namespace ProyectoEcommerce.ViewComponents
             if (!string.IsNullOrWhiteSpace(email))
                 cart = await _cartService.GetCartByEmailAsync(email);
 
-            
-            return View("Default", cart);
+            // Ruta absoluta para evitar que agarre otro "Default.cshtml"
+            return View("~/Views/Shared/Components/CartTodo/Default.cshtml", cart);
         }
     }
 }
-

@@ -39,13 +39,13 @@
                 <a href="#" class="header-btn btn btn-link">Favoritos</a>
                 <a href="#" class="header-btn btn btn-link">Carrito <span class="cart-badge badge bg-primary">3</span></a>
 
-                <!-- Botón Accesibilidad -->
-                <button id="btnAccessibility"
-                        class="accessibility-btn btn btn-outline-secondary"
-                        aria-controls="accessibilityPanel"
-                        aria-expanded="false"
-                        aria-haspopup="dialog">
-                    ♿ Accesibilidad
+                @* Usar únicamente el ViewComponent CartTodo (evita duplicados) *@
+               @await Component.InvokeAsync("CartTodo")
+
+                
+
+                <button id="btnAccessibility" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
+                    <i class="fas fa-universal-access" style="font-size: 1.3rem;"></i>
                 </button>
             </div>
         </div>
