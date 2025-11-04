@@ -1,0 +1,41 @@
+﻿@model ProyectoEcommerce.Models.ShoppingCart
+@using System.Globalization
+
+@if (Model == null || !Model.Items.Any())
+{
+    <a asp-controller="ShoppingCarts" asp-action="My" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
+        <i class="fas fa-shopping-cart" style="font-size: 1.3rem;"></i>
+    </a>
+}
+else
+{
+    <div class="dropdown">
+        <a class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-shopping-cart" style="font-size: 1.1rem;"></i>
+            <span class="badge bg-danger ms-2">@Model.Items.Sum(i => i.Quantity)</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end p-2" style="min-width:300px;">
+            @foreach (var item in Model.Items.Take(5))
+            {
+                <li class="d-flex mb-2">
+                    @if (!string.IsNullOrEmpty(item.Product?.ImageUrl))
+                    {
+                        <img src="@item.Product.ImageUrl" style="width:40px;height:40px;object-fit:cover;margin-right:8px;" alt="@item.Product?.Name" />
+                    }
+                    <div>
+                        <div class="small">@item.Product?.Name</div>
+                        <div class="small text-muted">@item.Quantity x @((item.Product?.Price ?? 0m).ToString("C", CultureInfo.CurrentCulture))</div>
+                    </div>
+                </li>
+            }
+            <li><hr class="dropdown-divider" /></li>
+            <li class="px-2">
+                <a class="btn btn-sm btn-outline-primary w-100 mb-1" asp-controller="ShoppingCarts" asp-action="My">Ver carrito</a>
+                <form asp-controller="ShoppingCarts" asp-action="Pay" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-success w-100">Pagar</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+}
