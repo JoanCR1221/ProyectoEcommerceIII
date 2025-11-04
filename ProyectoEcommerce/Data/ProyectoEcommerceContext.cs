@@ -90,6 +90,7 @@ namespace ProyectoEcommerce.Data
             modelBuilder.Entity<Faq>()
                 .HasIndex(f => new { f.Category, f.SortOrder });
         }
+       // public DbSet<ProyectoEcommerce.Models.Favorite> Favorite { get; set; }
     }
 }
 

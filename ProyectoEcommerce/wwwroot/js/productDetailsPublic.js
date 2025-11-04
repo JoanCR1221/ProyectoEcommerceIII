@@ -1,5 +1,4 @@
-﻿// wwwroot/js/productDetailsPublic.js
-// Funcionalidades para la vista pública de detalles de producto
+﻿// Funcionalidades para la vista pública de detalles de producto
 
 class ProductDetailsPublic {
     constructor(productId, categoryId) {
@@ -11,6 +10,9 @@ class ProductDetailsPublic {
     init() {
         this.setupAddToCart();
         this.loadRelatedProducts();
+        this.setupFavorites();
+        this.checkFavoriteStatus();
+        this.loadFavoritesCount();
     }
 
     setupAddToCart() {
@@ -23,7 +25,7 @@ class ProductDetailsPublic {
     }
 
     addToCart(productId) {
-        // Lógica para agregar al carrito
+        //  agregar al carrito
         console.log('Agregando producto al carrito:', productId);
 
         // Mostrar feedback al usuario
@@ -33,24 +35,166 @@ class ProductDetailsPublic {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Agregando...';
         btn.disabled = true;
 
-        // Simular llamada a API (reemplazar con lógica real)
+        // 
         setTimeout(() => {
             btn.innerHTML = '<i class="fas fa-check"></i> ¡Agregado!';
             btn.classList.remove('btn-primary');
             btn.classList.add('btn-success');
 
-            // Mostrar notificación
+            // Mostra notificación
             this.showNotification('Producto agregado al carrito', 'success');
 
-            // Restaurar después de 2 segundos
+            // Restaura después de 1 segundo
             setTimeout(() => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
                 btn.classList.remove('btn-success');
                 btn.classList.add('btn-primary');
-            }, 2000);
-        }, 1000);
+            }, 1000);
+        }, 500);
     }
+
+    // ========== MÉTODOS PARA FAVORITOS ==========
+
+    setupFavorites() {
+        const favoriteBtn = document.querySelector('.favorite-btn');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', () => {
+                const productId = favoriteBtn.getAttribute('data-product-id');
+                this.toggleFavorite(productId);
+            });
+        }
+    }
+
+    async checkFavoriteStatus() {
+        try {
+            const response = await fetch(`/Favorites/CheckFavorite?productId=${this.productId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                this.updateFavoriteUI(result.isFavorite);
+            }
+        } catch (error) {
+            console.error('Error verificando favorito:', error);
+        }
+    }
+
+    async toggleFavorite(productId) {
+        try {
+            const response = await fetch('/Favorites/ToggleFavorite', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(productId)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Actualiza icono del botón
+                this.updateFavoriteButton(result.isFavorite);
+
+                // Mostrar notificación
+                this.showNotification(result.message, result.isFavorite ? 'success' : 'info');
+
+                // Actualiza contador en header
+                this.loadFavoritesCount();
+            } else {
+                this.showNotification('Error: ' + result.message, 'error');
+            }
+
+        } catch (error) {
+            console.error('Error en toggleFavorite:', error);
+            this.showNotification('Error al actualizar favoritos', 'error');
+        }
+    }
+
+    updateFavoriteButton(isFavorite) {
+        const favoriteBtn = document.querySelector('.favorite-btn');
+        const icon = favoriteBtn.querySelector('i');
+
+        if (isFavorite) {
+            icon.className = 'fas fa-heart';
+            favoriteBtn.classList.remove('btn-outline-secondary');
+            favoriteBtn.classList.add('btn-danger', 'text-white'); // Texto blanco 
+            favoriteBtn.innerHTML = '<i class="fas fa-heart"></i> Favorito';
+            favoriteBtn.title = "Remover de favoritos";
+        } else {
+            icon.className = 'far fa-heart';
+            favoriteBtn.classList.remove('btn-danger', 'text-white');
+            favoriteBtn.classList.add('btn-outline-secondary');
+            favoriteBtn.innerHTML = '<i class="far fa-heart"></i> Favorito';
+            favoriteBtn.title = "Agregar a favoritos";
+        }
+    }
+
+    updateFavoriteUI(isFavorite) {
+        const favoriteBtn = document.querySelector('.favorite-btn');
+        if (!favoriteBtn) return;
+
+        const favoriteIcon = favoriteBtn.querySelector('i');
+
+        if (isFavorite) {
+            favoriteIcon.className = 'fas fa-heart'; // Corazón lleno
+            favoriteBtn.classList.add('text-danger');
+            favoriteBtn.title = "Remover de favoritos";
+        } else {
+            favoriteIcon.className = 'far fa-heart'; // Corazón vacío
+            favoriteBtn.classList.remove('text-danger');
+            favoriteBtn.title = "Agregar a favoritos";
+        }
+    }
+
+    async loadFavoritesCount() {
+        try {
+            const response = await fetch('/Favorites/GetFavorites');
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.updateFavoritesBadge(data.favorites.length);
+            } else {
+                this.updateFavoritesBadge(0);
+            }
+
+        } catch (error) {
+            console.error('Error cargando contador de favoritos:', error);
+            this.updateFavoritesBadge(0);
+        }
+    }
+
+    updateFavoritesCounter() {
+        // Incrementa el contador visualmente
+        const favoritesBadge = document.querySelector('.favorites-badge');
+        if (favoritesBadge) {
+            const currentCount = parseInt(favoritesBadge.textContent) || 0;
+            const newCount = currentCount + 1;
+            favoritesBadge.textContent = newCount;
+            favoritesBadge.style.display = newCount > 0 ? 'block' : 'none';
+        }
+
+        // También recarga el conteo real del servidor
+        this.loadFavoritesCount();
+    }
+
+    updateFavoritesBadge(count) {
+        const favoritesBadge = document.querySelector('.favorites-badge');
+        if (favoritesBadge) {
+            if (count > 0) {
+                favoritesBadge.textContent = count;
+                favoritesBadge.style.display = 'block';
+            } else {
+                favoritesBadge.style.display = 'none';
+            }
+        }
+    }
+
+    // ========== MÉTODOS  ==========
 
     async loadRelatedProducts() {
         try {
@@ -82,13 +226,13 @@ class ProductDetailsPublic {
                     <div class="col-md-3 mb-4">
                         <div class="card h-100 product-card">
                             <img src="${product.imageUrl ? product.imageUrl.replace('~/', '/') : '/images/no-image.png'}" 
-     class="card-img-top" 
-     alt="${product.name}"
-     style="height: 200px; object-fit: cover;"
-     onerror="this.src='/images/no-image.png'">
+                                 class="card-img-top" 
+                                 alt="${product.name}"
+                                 style="height: 200px; object-fit: cover;"
+                                 onerror="this.src='/images/no-image.png'">
                             <div class="card-body d-flex flex-column">
                                 <h6 class="card-title">${product.name}</h6>
-                                <p class="card-text text-primary fw-bold mt-auto">₡${product.price.toFixed(2)}</p>
+                                <p class="card-text text-primary fw-bold mt-auto">₡${product.price.toLocaleString('en-US')}</p>
                                 <a href="/Products/DetailsPublic/${product.id}" 
                                    class="btn btn-sm btn-outline-primary w-100 mt-2">
                                     Ver Producto
@@ -112,7 +256,7 @@ class ProductDetailsPublic {
     }
 
     showNotification(message, type = 'info') {
-        // Crear notificación toast
+        // Crear notificación toast...Agregado a favoritos/Removido de favoritos
         const toast = document.createElement('div');
         toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
         toast.style.cssText = `
@@ -128,18 +272,18 @@ class ProductDetailsPublic {
 
         document.body.appendChild(toast);
 
-        // Auto-remover después de 5 segundos
+        // Auto-remover después de...900
         setTimeout(() => {
             if (toast.parentNode) {
                 toast.remove();
             }
-        }, 5000);
+        }, 900);
     }
 }
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function () {
-    // Obtener IDs del data attributes o de variables globales
+  
     const productId = document.querySelector('[data-product-id]')?.getAttribute('data-product-id');
     const categoryId = document.querySelector('[data-category-id]')?.getAttribute('data-category-id');
 

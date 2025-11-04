@@ -1,36 +1,53 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace ProyectoEcommerce.Controllers
 {
-    public class ContactController : Controller
+    public class ContactSucursalesController : Controller
     {
-        // GET: ContactController
-        
-        // GET: ContactController?branch=central
-        public ActionResult Index()
+    
+
+
+       
+        public ActionResult Index(string branch)
         {
-           
-         
+
+            if (!string.IsNullOrEmpty(branch))
+            {
+                ViewData["Branch"] = branch;
+                ViewData["Title"] = $"Sucursal {GetBranchName(branch)}";
+            }
+            else
+            {
+                ViewData["Title"] = "Contacto";
+            }
 
             return View();
         }
 
-     
+        private string GetBranchName(string branch)
+        {
+            return branch switch
+            {
+                "central" => "Central - Nicoya",
+                "oeste" => "Plaza Oeste",
+                "playa" => "Punto Express - Playa",
+                _ => "Contacto"
+            };
+        }
 
-        // GET: ContactController/Details/5
+        
         public ActionResult Details(int id)
         {
             return View();
         }
 
-        // GET: ContactController/Create
+      
         public ActionResult Create()
         {
             return View();
         }
 
-        // POST: ContactController/Create
+     
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(IFormCollection collection)
@@ -45,13 +62,13 @@ namespace ProyectoEcommerce.Controllers
             }
         }
 
-        // GET: ContactController/Edit/5
+        
         public ActionResult Edit(int id)
         {
             return View();
         }
 
-        // POST: ContactController/Edit/5
+  
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(int id, IFormCollection collection)
@@ -66,13 +83,13 @@ namespace ProyectoEcommerce.Controllers
             }
         }
 
-        // GET: ContactController/Delete/5
+      
         public ActionResult Delete(int id)
         {
             return View();
         }
 
-        // POST: ContactController/Delete/5
+     
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id, IFormCollection collection)
