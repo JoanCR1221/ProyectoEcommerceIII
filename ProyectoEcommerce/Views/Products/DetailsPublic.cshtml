@@ -64,11 +64,41 @@
                     @if (Model.Available && Model.Stock > 0)
                     {
                         <div class="d-grid gap-2 d-md-flex">
+<<<<<<< Updated upstream
                             <button class="btn btn-primary btn-lg flex-fill add-to-cart"
                                     data-product-id="@Model.Id">
                                 <i class="fas fa-cart-plus"></i> Agregar al Carrito
                             </button>
                             <button class="btn btn-outline-secondary btn-lg">
+=======
+                            <form asp-controller="ShoppingCarts" asp-action="AddToCart" method="post"
+                                  class="d-flex align-items-center gap-2 p-0 m-0 add-to-cart-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <input type="hidden" name="returnUrl" value="@Url.Action("DetailsPublic", "Products", new { id = Model.Id })" />
+
+                                <div class="input-group" style="width:130px;">
+                                    <input type="number"
+                                           name="quantity"
+                                           class="form-control"
+                                           value="1"
+                                           min="1"
+                                           max="@Model.Stock"
+                                           aria-label="Cantidad" />
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-lg flex-fill add-to-cart-btn">
+                                    <span class="button-text">
+                                        <i class="fas fa-cart-plus"></i> Agregar al Carrito
+                                    </span>
+                                    <span class="spinner-border spinner-border-sm d-none" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </span>
+                                </button>
+                            </form>
+
+                            <button class="btn btn-outline-secondary btn-lg favorite-btn" data-product-id="@Model.Id" title="Agregar a favoritos">
+>>>>>>> Stashed changes
                                 <i class="fas fa-heart"></i> Favorito
                             </button>
                         </div>
@@ -80,6 +110,8 @@
                         </button>
                     }
                 </div>
+
+
 
                 <div class="product-meta">
                     <div class="row small text-muted">

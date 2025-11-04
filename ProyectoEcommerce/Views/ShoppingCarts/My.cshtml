@@ -1,0 +1,121 @@
+﻿@model ProyectoEcommerce.Models.ShoppingCart
+@using System.Linq
+@using System.Globalization
+
+@{
+    //  formato personalizado con coma para miles
+    var customFormat = new NumberFormatInfo
+    {
+        NumberDecimalDigits = 0,
+        NumberGroupSeparator = ",",
+        NumberDecimalSeparator = "."
+    };
+}
+
+<h2>Mi carrito</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+@if (Model == null || !Model.Items.Any())
+{
+    <div class="alert alert-info">Tu carrito está vacío.</div>
+    <a asp-controller="/" asp-action="Index" class="btn btn-primary">Seguir comprando</a>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Imagen</th>
+                <th>Producto</th>
+                <th>Precio unidad</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>
+                        @if (!string.IsNullOrEmpty(item.Product?.ImageUrl))
+                        {
+                            <!-- ruta de la imagen -->
+                            <img src="@Url.Content(item.Product.ImageUrl)"
+                                 alt="@item.Product?.Name"
+                                 style="height:60px; width:60px; object-fit:cover;"
+                                 onerror="this.src='/images/no-image.png'" />
+                        }
+                        else
+                        {
+                            <!-- Imagen por defecto -->
+                            <img src="/images/no-image.png"
+                                 alt="Sin imagen"
+                                 style="height:60px; width:60px; object-fit:cover;" />
+                        }
+                    </td>
+                    <td>
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId">@item.Product?.Name</a>
+                    </td>
+                    <td>₡@((item.Product?.Price ?? 0).ToString("N0", customFormat))</td>
+                    <td>
+                        <form asp-controller="ShoppingCarts" asp-action="UpdateQuantity" method="post" class="d-flex align-items-center">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="cartId" value="@Model.ShoppingCartId" />
+                            <input type="hidden" name="productId" value="@item.ProductId" />
+                            <input type="number" name="quantity" value="@item.Quantity" min="1" max="999" class="form-control me-2" style="width:90px;" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Actualizar</button>
+                        </form>
+                    </td>
+                    <td>₡@((item.Quantity * (item.Product?.Price ?? 0)).ToString("N0", customFormat))</td>
+                    <td>
+                        <form asp-controller="ShoppingCarts" asp-action="RemoveItem" method="post" onsubmit="return confirm('¿Eliminar este producto del carrito?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="cartId" value="@Model.ShoppingCartId" />
+                            <input type="hidden" name="productId" value="@item.ProductId" />
+                            <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+    var subtotal = Model.Items.Sum(i => i.Quantity * (i.Product?.Price ?? 0m));
+    var ivaRate = 0.13m;
+    var iva = Math.Round(subtotal * ivaRate, 2);
+    var total = subtotal + iva;
+
+
+    <div class="row">
+        <div class="col-md-6">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Seguir comprando</a>
+        </div>
+        <div class="col-md-6 text-end">
+            <dl class="row justify-content-end">
+                <dt class="col-4">Subtotal:</dt>
+                <dd class="col-4">₡@subtotal.ToString("N0", customFormat)</dd>
+
+                <dt class="col-4">IVA (@(ivaRate * 100) %):</dt>
+                <dd class="col-4">₡@iva.ToString("N0", customFormat)</dd>
+
+                <dt class="col-4 h5">Total:</dt>
+                <dd class="col-4 h5">₡@total.ToString("N0", customFormat)</dd>
+            </dl>
+
+            <form asp-controller="ShoppingCarts" asp-action="Pay" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success btn-lg">Pagar</button>
+            </form>
+        </div>
+    </div>
+}
