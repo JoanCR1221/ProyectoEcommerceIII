@@ -2,14 +2,6 @@
 
 @{
     ViewData["Title"] = "Details";
-
-    // Crear formato personalizado con coma para miles
-    var customFormat = new System.Globalization.NumberFormatInfo
-    {
-        NumberDecimalDigits = 0,
-        NumberGroupSeparator = ",",
-        NumberDecimalSeparator = "."
-    };
 }
 
 <h1>Details</h1>
@@ -18,44 +10,45 @@
     <h4>Buy</h4>
     <hr />
     <dl class="row">
-        <dt class="col-sm-2">
+        <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Fecha)
         </dt>
-        <dd class="col-sm-10">
+        <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Fecha)
         </dd>
-        <dt class="col-sm-2">
+        <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Subtotal)
         </dt>
-        <dd class="col-sm-10">
-            ₡@Model.Subtotal.ToString("N0", customFormat)
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Subtotal)
         </dd>
-        <dt class="col-sm-2">
+        <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.IVA)
         </dt>
-        <dd class="col-sm-10">
-            ₡@Model.IVA.ToString("N0", customFormat)
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.IVA)
         </dd>
-        <dt class="col-sm-2">
+        <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Total)
         </dt>
-        <dd class="col-sm-10">
-            ₡@Model.Total.ToString("N0", customFormat)
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Total)
         </dd>
-        <dt class="col-sm-2">
+        <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Customer)
         </dt>
-        <dd class="col-sm-10">
+        <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Customer.Email)
         </dd>
-        <dt class="col-sm-2">
+        <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Employee)
         </dt>
-        <dd class="col-sm-10">
+        <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Employee.Name)
         </dd>
     </dl>
 </div>
 <div>
-    <a href="javascript:history.back()" class="btn btn-secondary">Back to List</a>
+    <a asp-action="Edit" asp-route-id="@Model?.BuyId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
 </div>
