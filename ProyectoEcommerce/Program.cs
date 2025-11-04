@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProyectoEcommerce.Data;
 using ProyectoEcommerce.Services;
-using System.Threading.Channels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +16,7 @@ builder.Services.AddDbContext<ProyectoEcommerceContext>(opciones =>
                 errorNumbersToAdd: null);
         }));
 
-//  CONFIGURACI?N DE IDENTITY CON ROLES 
+// CONFIGURACIÓN DE IDENTITY CON ROLES 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -27,18 +26,17 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
 
-    // Configuraci?n de bloqueo
+    // Configuración de bloqueo
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 
-    // Configuraci?n de usuario
+    // Configuración de usuario
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<ProyectoEcommerceContext>()
 .AddDefaultTokenProviders()
 .AddDefaultUI();
-
 
 builder.Services.AddSession(options =>
 {
@@ -56,56 +54,50 @@ builder.Services.AddRazorPages();
 // Registrar servicio del carrito
 builder.Services.AddScoped<ICartService, CartService>();
 
-// CONSTRUCCI?N DE LA APLICACI?N
+// CONSTRUCCIÓN DE LA APLICACIÓN
 var app = builder.Build();
 
-// INICIALIZACI?N DE BASE DE DATOS Y ROLES
+// INICIALIZACIÓN DE BASE DE DATOS Y ROLES
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-
     try
     {
-
-        // 1. Aplicar migraciones pendientes
         var context = services.GetRequiredService<ProyectoEcommerceContext>();
         await context.Database.MigrateAsync();
         Console.WriteLine("Migraciones aplicadas correctamente");
 
-        // 2. Inicializar roles y administrador usando DbInitializer
+        // Obtener managers para inicializar roles/usuario administrador si es necesario
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+
+        // Si tienes un DbInitializer estático que requiere IServiceProvider:
         await DbInitializer.Initialize(services);
-        Console.WriteLine("Roles y usuario administrador inicializados");
+        Console.WriteLine("Roles y usuario administrador inicializados por DbInitializer");
+
+        // Ejemplo adicional de garantía de existencia de rol/admin (opcional)
+        const string ADMIN = "Admin";
+        if (!await roleManager.RoleExistsAsync(ADMIN))
+            await roleManager.CreateAsync(new IdentityRole(ADMIN));
+
+        var adminEmail = "admin@demo.com";
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        if (adminUser == null)
+        {
+            var admin = new IdentityUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+            var result = await userManager.CreateAsync(admin, "Admin123!");
+            if (result.Succeeded)
+                await userManager.AddToRoleAsync(admin, ADMIN);
+        }
     }
     catch (InvalidOperationException ex) when (ex.Message.Contains("pending changes"))
     {
         Console.WriteLine("Advertencia: Hay cambios pendientes en el modelo. Ejecuta 'dotnet ef migrations add [NombreMigracion]'");
     }
-    catch (Exception ex) { 
-
-        db.Database.Migrate();
-    }
-    catch (InvalidOperationException ex) when (ex.Message.Contains("pending changes"))
-    {
-        Console.WriteLine("Advertencia: Hay cambios pendientes en el modelo. Ejecuta 'Add-Migration'.");
-    }
-
-    var roles = sp.GetRequiredService<RoleManager<IdentityRole>>();
-    var users = sp.GetRequiredService<UserManager<IdentityUser>>();
-
-    const string ADMIN = "Admin";
-    if (!await roles.RoleExistsAsync(ADMIN))
-        await roles.CreateAsync(new IdentityRole(ADMIN));
-
-    var email = "admin@demo.com";
-    var pass = "Admin123!";
-    var admin = await users.FindByEmailAsync(email);
-    if (admin == null)
-
+    catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Error al inicializar la base de datos");
-
-        // Mostrar error en consola para debugging
         Console.WriteLine($"Error: {ex.Message}");
         if (ex.InnerException != null)
         {
@@ -114,9 +106,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// CONFIGURACI?N DEL PIPELINE HTTP
-
-// Configurar manejo de errores seg?n el entorno
+// CONFIGURACIÓN DEL PIPELINE HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -127,12 +117,11 @@ else
     app.UseHsts();
 }
 
-// Middleware b?sico
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -140,29 +129,9 @@ app.MapControllerRoute(
     name: "admin",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
-
-// USO DE SESI?N
-app.UseSession();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-
-app.UseSession();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-
-app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
-
 
 app.MapRazorPages();
 

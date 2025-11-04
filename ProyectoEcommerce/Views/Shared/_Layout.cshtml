@@ -50,72 +50,8 @@
                     </span>
                 </a>
 
-                <<<<<<< Updated upstream
-                <<<<<<< Updated upstream
-                @* Widget carrito: invoca el ViewComponent creado *@
-                @if (SignInManager.IsSignedIn(User))
-                {
-                    @await Component.InvokeAsync("CartTodo")
-                }
-                else
-                {
-                    <a asp-controller="ShoppingCarts" asp-action="My" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
-                        <i class="fas fa-shopping-cart" style="font-size: 1.3rem;"></i>
-                    </a>
-                }
-                =======
-                =======
-                >>>>>>> Stashed changes
-                <div class="dropdown">
-                    <a href="#" class="header-btn btn btn-outline-secondary btn-sm dropdown-toggle"
-                       style="min-width: 60px; height: 36px; position: relative;"
-                       id="cartDropdownButton"
-                       data-bs-toggle="dropdown"
-                       aria-expanded="false"
-                       title="Mi Carrito">
-                        <i class="fas fa-shopping-cart" style="font-size: 1.3rem;"></i>
-                        <span class="cart-badge badge bg-danger" style="
-                position: absolute;
-                top: -5px;
-                right: -5px;
-                font-size: 0.6rem;
-                display: none;">
-                            0
-                        </span>
-                    </a>
-
-                    <!-- Dropdown del carrito -->
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="cartDropdownButton" style="min-width: 320px;">
-                        <li><h6 class="dropdown-header">Mi Carrito de Compras</h6></li>
-                        <li>
-                            <div class="dropdown-item text-center py-3" id="emptyCartMessage">
-                                <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
-                                <p class="text-muted mb-0">Tu carrito está vacío</p>
-                            </div>
-                        </li>
-                        <!-- Cambiar el div por li -->
-                        <li id="cartItemsList">
-                            <!-- Los productos del carrito se cargarán aquí dinámicamente -->
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <div class="dropdown-item">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <strong>Total:</strong>
-                                    <strong id="cartTotal">₡0</strong>
-                                </div>
-                                <div class="d-grid gap-2">
-                                    <a href="/Cart" class="btn btn-primary btn-sm">Ver Carrito Completo</a>
-                                    <a href="/Checkout" class="btn btn-outline-primary btn-sm">Finalizar Compra</a>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                <<<<<<< Updated upstream
-                >>>>>>> Stashed changes
-                =======
-                >>>>>>> Stashed changes
+                @* Usar únicamente el ViewComponent CartTodo (evita duplicados) *@
+                @await Component.InvokeAsync("CartTodo")
 
                 <button id="btnAccessibility" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
                     <i class="fas fa-universal-access" style="font-size: 1.3rem;"></i>
