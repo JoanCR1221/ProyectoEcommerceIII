@@ -1,13 +1,13 @@
-﻿
-
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ProyectoEcommerce.Data;
 using ProyectoEcommerce.Models;
+using ProyectoEcommerce.Services;
 
 namespace ProyectoEcommerce.Controllers
 {
@@ -15,11 +15,15 @@ namespace ProyectoEcommerce.Controllers
     public class ShoppingCartsController : Controller
     {
         private readonly ProyectoEcommerceContext _context;
-        private const decimal IVA_RATE = 0.13m; // ajusta si necesitas otro porcentaje
+        private readonly ICartService _cartService;
+        private readonly ILogger<ShoppingCartsController> _logger;
+        private const decimal IVA_RATE = 0.13m;
 
-        public ShoppingCartsController(ProyectoEcommerceContext context)
+        public ShoppingCartsController(ProyectoEcommerceContext context, ICartService cartService, ILogger<ShoppingCartsController> logger)
         {
             _context = context;
+            _cartService = cartService;
+            _logger = logger;
         }
 
         // ========= ADMIN: listado global =========
@@ -38,26 +42,11 @@ namespace ProyectoEcommerce.Controllers
             var email = User?.Identity?.Name;
             if (string.IsNullOrWhiteSpace(email)) return Challenge();
 
-            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == email);
-            if (customer == null)
-            {
-                return RedirectToAction("My", "Customers");
-            }
-
-            var cart = await _context.ShoppingCarts
-                .Include(s => s.Customer)
-                .Include(s => s.Items).ThenInclude(i => i.Product)
-                .FirstOrDefaultAsync(s => s.CustomerId == customer.CustomerId);
-
+            var cart = await _cartService.GetCartByEmailAsync(email);
             if (cart == null)
             {
-                cart = new ShoppingCart
-                {
-                    CustomerId = customer.CustomerId,
-                    CreatedDate = DateTime.UtcNow
-                };
-                _context.ShoppingCarts.Add(cart);
-                await _context.SaveChangesAsync();
+                // el servicio crea el carrito cuando se añade un producto.
+                return View(null);
             }
 
             return View(cart); // Views/ShoppingCarts/My.cshtml
@@ -67,54 +56,17 @@ namespace ProyectoEcommerce.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> AddToCart(int productId, int quantity = 1, string returnUrl = null)
         {
-            if (quantity <= 0) quantity = 1;
-
             var email = User?.Identity?.Name;
             if (string.IsNullOrWhiteSpace(email)) return Challenge();
 
-            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == email);
-            if (customer == null) return RedirectToAction("My", "Customers");
-
-            var cart = await _context.ShoppingCarts
-                .Include(s => s.Items)
-                .FirstOrDefaultAsync(s => s.CustomerId == customer.CustomerId);
-
-            if (cart == null)
+            try
             {
-                cart = new ShoppingCart
-                {
-                    CustomerId = customer.CustomerId,
-                    CreatedDate = DateTime.UtcNow
-                };
-                _context.ShoppingCarts.Add(cart);
-                await _context.SaveChangesAsync();
+                await _cartService.AddToCartAsync(email, productId, quantity);
             }
-
-            // Intentar obtener el producto (para precio/validaciones opcionales)
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null) return NotFound();
-
-            var existingItem = await _context.ShoppingCartItems
-                .FirstOrDefaultAsync(i => i.ShoppingCartId == cart.ShoppingCartId && i.ProductId == productId);
-
-            if (existingItem != null)
+            catch (InvalidOperationException ex)
             {
-                existingItem.Quantity += quantity;
-                _context.ShoppingCartItems.Update(existingItem);
+                TempData["Error"] = ex.Message;
             }
-            else
-            {
-                var item = new ShoppingCartItem
-                {
-                    ShoppingCartId = cart.ShoppingCartId,
-                    ProductId = productId,
-                    Quantity = quantity,
-                    AddedDate = DateTime.UtcNow
-                };
-                _context.ShoppingCartItems.Add(item);
-            }
-
-            await _context.SaveChangesAsync();
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
@@ -122,76 +74,53 @@ namespace ProyectoEcommerce.Controllers
             return RedirectToAction("My");
         }
 
-        // Pagar: crea un Buy y sus BuyItems, elimina el ShoppingCart y redirige a la "factura" (Buy Details)
+        // Pagar: delega al servicio que hace la transacción
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Pay()
         {
             var email = User?.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(email)) return Challenge();
-
-            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == email);
-            if (customer == null) return RedirectToAction("My", "Customers");
-
-            var cart = await _context.ShoppingCarts
-                .Include(s => s.Items).ThenInclude(i => i.Product)
-                .FirstOrDefaultAsync(s => s.CustomerId == customer.CustomerId);
-
-            if (cart == null || !cart.Items.Any())
+            if (string.IsNullOrWhiteSpace(email))
             {
-                TempData["Error"] = "El carrito está vacío.";
+                _logger.LogWarning("Pay: usuario no autenticado.");
+                return Challenge();
+            }
+
+            try
+            {
+                _logger.LogInformation("Pay iniciado para {Email}", email);
+                var buy = await _cartService.CreateBuyFromCartAsync(email, IVA_RATE);
+                _logger.LogInformation("Pay completado. BuyId={BuyId} para {Email}", buy.BuyId, email);
+                TempData["Success"] = "Pago realizado correctamente.";
+                return RedirectToAction("Details", "Buys", new { id = buy.BuyId });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Pay falló (operación inválida) para {Email}", email);
+                TempData["Error"] = ex.Message;
                 return RedirectToAction("My");
             }
-
-            // Calcular importes
-            decimal subtotal = cart.Items.Sum(i => i.Quantity * i.Product.Price);
-            decimal iva = Math.Round(subtotal * IVA_RATE, 2);
-            decimal total = subtotal + iva;
-
-            // Crear Buy
-            var buy = new Buy
+            catch (Exception ex)
             {
-                CustomerId = customer.CustomerId,
-                EmployeeId = _context.Employees.Select(e => (int?)e.EmployeeId).FirstOrDefault(), // si no hay empleados queda null
-                Fecha = DateTime.UtcNow,
-                Subtotal = subtotal,
-                IVA = iva,
-                Total = total,
-                Paid = true
-            };
-
-            // Añadir Buy y BuyItems
-            _context.Buys.Add(buy);
-            // Guardar para obtener BuyId si es necesario (EF maneja relación aunque no guardemos inmediatamente)
-            await _context.SaveChangesAsync();
-
-            foreach (var ci in cart.Items)
-            {
-                var bi = new BuyItem
-                {
-                    BuyId = buy.BuyId,
-                    ProductId = ci.ProductId,
-                    Quantity = ci.Quantity,
-                    UnitPrice = ci.Product.Price,
-                    Subtotal = ci.Quantity * ci.Product.Price
-                };
-                _context.BuyItems.Add(bi);
-
-                // Opcional: reducir stock del producto
-                var prod = await _context.Products.FindAsync(ci.ProductId);
-                if (prod != null)
-                {
-                    prod.Stock = Math.Max(0, prod.Stock - ci.Quantity);
-                    _context.Products.Update(prod);
-                }
+                _logger.LogError(ex, "Pay falló inesperadamente para {Email}", email);
+                TempData["Error"] = "Error al procesar el pago. Inténtalo de nuevo más tarde.";
+                return RedirectToAction("My");
             }
+        }
 
-            // Eliminar carrito (cascade eliminará ShoppingCartItems)
-            _context.ShoppingCarts.Remove(cart);
+        // Actualiza la cantidad de un item del carrito
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateQuantity(int cartId, int productId, int quantity)
+        {
+            await _cartService.UpdateQuantityAsync(cartId, productId, quantity);
+            return RedirectToAction("My");
+        }
 
-            await _context.SaveChangesAsync();
-
-            // Redirigir a factura (Detalles de la compra)
-            return RedirectToAction("Details", "Buys", new { id = buy.BuyId });
+        // Elimina un item del carrito
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveItem(int cartId, int productId)
+        {
+            await _cartService.RemoveItemAsync(cartId, productId);
+            return RedirectToAction("My");
         }
 
         // ========= Details: Admin ve todo; dueño puede ver el suyo =========

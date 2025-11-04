@@ -98,68 +98,75 @@ namespace ProyectoEcommerce.Services
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == email)
                          ?? throw new InvalidOperationException("Customer no encontrado.");
 
-            var cart = await _context.ShoppingCarts
-                .Include(s => s.Items).ThenInclude(i => i.Product)
-                .FirstOrDefaultAsync(s => s.CustomerId == customer.CustomerId);
+            // Usamos la execution strategy para ejecutar todo el flujo transaccional como unidad reintentable
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-            if (cart == null || !cart.Items.Any()) throw new InvalidOperationException("Carrito vacío.");
-
-            // Transacción para garantizar atomicidad
-            await using var tx = await _context.Database.BeginTransactionAsync();
-
-            try
+            return await strategy.ExecuteAsync(async () =>
             {
-                decimal subtotal = cart.Items.Sum(i => i.Quantity * i.Product.Price);
-                decimal iva = Math.Round(subtotal * ivaRate, 2);
-                decimal total = subtotal + iva;
+                // Volver a cargar el carrito dentro del delegado (evita usar entidades previamente rastreadas si el delegado se reintenta)
+                var cart = await _context.ShoppingCarts
+                    .Include(s => s.Items).ThenInclude(i => i.Product)
+                    .FirstOrDefaultAsync(s => s.CustomerId == customer.CustomerId);
 
-                var buy = new Buy
+                if (cart == null || !cart.Items.Any()) throw new InvalidOperationException("Carrito vacío.");
+
+                // Iniciar transacción manual dentro del delegado
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    CustomerId = customer.CustomerId,
-                    EmployeeId = _context.Employees.Select(e => (int?)e.EmployeeId).FirstOrDefault(),
-                    Fecha = DateTime.UtcNow,
-                    Subtotal = subtotal,
-                    IVA = iva,
-                    Total = total,
-                    Paid = true
-                };
+                    decimal subtotal = cart.Items.Sum(i => i.Quantity * i.Product.Price);
+                    decimal iva = Math.Round(subtotal * ivaRate, 2);
+                    decimal total = subtotal + iva;
 
-                _context.Buys.Add(buy);
-                await _context.SaveChangesAsync(); // para generar BuyId
-
-                foreach (var ci in cart.Items)
-                {
-                    _context.BuyItems.Add(new BuyItem
+                    var buy = new Buy
                     {
-                        BuyId = buy.BuyId,
-                        ProductId = ci.ProductId,
-                        Quantity = ci.Quantity,
-                        UnitPrice = ci.Product.Price,
-                        Subtotal = ci.Quantity * ci.Product.Price
-                    });
+                        CustomerId = customer.CustomerId,
+                        EmployeeId = _context.Employees.Select(e => (int?)e.EmployeeId).FirstOrDefault(),
+                        Fecha = DateTime.UtcNow,
+                        Subtotal = subtotal,
+                        IVA = iva,
+                        Total = total,
+                        Paid = true
+                    };
 
-                    // Reducir stock
-                    var prod = await _context.Products.FindAsync(ci.ProductId);
-                    if (prod != null)
+                    _context.Buys.Add(buy);
+                    await _context.SaveChangesAsync(); // genera BuyId
+
+                    foreach (var ci in cart.Items)
                     {
-                        prod.Stock = Math.Max(0, prod.Stock - ci.Quantity);
-                        _context.Products.Update(prod);
+                        // Crear BuyItem
+                        _context.BuyItems.Add(new BuyItem
+                        {
+                            BuyId = buy.BuyId,
+                            ProductId = ci.ProductId,
+                            Quantity = ci.Quantity,
+                            UnitPrice = ci.Product.Price,
+                            Subtotal = ci.Quantity * ci.Product.Price
+                        });
+
+                        // Reducir stock de forma segura (volver a cargar producto por si acaso)
+                        var prod = await _context.Products.FirstOrDefaultAsync(p => p.Id == ci.ProductId);
+                        if (prod != null)
+                        {
+                            prod.Stock = Math.Max(0, prod.Stock - ci.Quantity);
+                            _context.Products.Update(prod);
+                        }
                     }
+
+                    // Eliminar carrito (cascade eliminará ShoppingCartItems)
+                    _context.ShoppingCarts.Remove(cart);
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return buy;
                 }
-
-                // Eliminar carrito (cascade eliminará items)
-                _context.ShoppingCarts.Remove(cart);
-
-                await _context.SaveChangesAsync();
-                await tx.CommitAsync();
-
-                return buy;
-            }
-            catch
-            {
-                await tx.RollbackAsync();
-                throw;
-            }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
         }
     }
 }
