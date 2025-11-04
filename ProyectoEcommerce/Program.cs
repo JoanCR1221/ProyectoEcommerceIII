@@ -6,7 +6,10 @@ using ProyectoEcommerce.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 //CONFIGURACIÓN DE LA BASE DE DATOS
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 builder.Services.AddDbContext<ProyectoEcommerceContext>(opciones =>
@@ -43,8 +46,11 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 .AddDefaultUI();
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 // SERVICIOS ADICIONALES
 =======
+=======
+>>>>>>> Stashed changes
 //  CONFIGURACIÓN DE SESIÓN
 builder.Services.AddSession(options =>
 {
@@ -75,6 +81,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         // 1. Aplicar migraciones pendientes
         var context = services.GetRequiredService<ProyectoEcommerceContext>();
         await context.Database.MigrateAsync();
@@ -90,6 +97,8 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
 =======
+=======
+>>>>>>> Stashed changes
         db.Database.Migrate();
     }
     catch (InvalidOperationException ex) when (ex.Message.Contains("pending changes"))
@@ -141,6 +150,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -157,17 +167,32 @@ app.UseAuthorization();
 
 // RUTA DEFAULT PRIMERO - ESTO ARREGLA EL PROBLEMA
 >>>>>>> Stashed changes
+=======
+// USO DE SESIÓN
+app.UseSession();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+// RUTA DEFAULT PRIMERO - ESTO ARREGLA EL PROBLEMA
+>>>>>>> Stashed changes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 //  RUTA DE ÁREAS DESPUÉS
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 app.MapRazorPages();
 
