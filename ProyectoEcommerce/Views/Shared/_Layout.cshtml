@@ -50,8 +50,8 @@
                     </span>
                 </a>
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+                <<<<<<< Updated upstream
+                <<<<<<< Updated upstream
                 @* Widget carrito: invoca el ViewComponent creado *@
                 @if (SignInManager.IsSignedIn(User))
                 {
@@ -63,9 +63,9 @@
                         <i class="fas fa-shopping-cart" style="font-size: 1.3rem;"></i>
                     </a>
                 }
-=======
-=======
->>>>>>> Stashed changes
+                =======
+                =======
+                >>>>>>> Stashed changes
                 <div class="dropdown">
                     <a href="#" class="header-btn btn btn-outline-secondary btn-sm dropdown-toggle"
                        style="min-width: 60px; height: 36px; position: relative;"
@@ -112,10 +112,10 @@
                         </li>
                     </ul>
                 </div>
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+                <<<<<<< Updated upstream
+                >>>>>>> Stashed changes
+                =======
+                >>>>>>> Stashed changes
 
                 <button id="btnAccessibility" class="header-btn btn btn-outline-secondary btn-sm" style="min-width: 60px; height: 36px;">
                     <i class="fas fa-universal-access" style="font-size: 1.3rem;"></i>
@@ -155,7 +155,7 @@
                             <li>
                                 <a class="dropdown-item"
                                    asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                                     Panel
+                                    Panel
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider" /></li>
@@ -163,7 +163,7 @@
                             <!-- ⭐ GESTIÓN DE USUARIOS Y ROLES - ESTO ES LO IMPORTANTE ⭐ -->
                             <li>
                                 <a class="dropdown-item" asp-controller="AdminUsers" asp-action="Index">
-                                     Gestión de Usuarios y Roles
+                                    Gestión de Usuarios y Roles
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider" /></li>
@@ -204,22 +204,22 @@
                             <li class="dropdown-header">@User.Identity?.Name</li>
                             <li>
                                 <a class="dropdown-item" asp-controller="Customers" asp-action="Perfil">
-                                     Mi Perfil
+                                    Mi Perfil
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" asp-controller="Buys" asp-action="My">
-                                     Mis Compras
+                                    Mis Compras
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" asp-controller="ShoppingCarts" asp-action="My">
-                                     Mi Carrito
+                                    Mi Carrito
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">
-                                     Configuración
+                                    Configuración
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider" /></li>
@@ -227,7 +227,7 @@
                                 <form asp-area="Identity" asp-page="/Account/Logout" method="post"
                                       asp-route-returnUrl="@Url.Action("Index", "Home")" class="px-3 py-1">
                                     <button class="btn btn-outline-danger w-100 btn-sm">
-                                         Salir
+                                        Salir
                                     </button>
                                 </form>
                             </li>
