@@ -16,7 +16,7 @@ builder.Services.AddDbContext<ProyectoEcommerceContext>(opciones =>
                 errorNumbersToAdd: null);
         }));
 
-// CONFIGURACIÓN DE IDENTITY CON ROLES 
+// CONFIGURACIï¿½N DE IDENTITY CON ROLES 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -26,12 +26,12 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
 
-    // Configuración de bloqueo
+    // Configuraciï¿½n de bloqueo
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 
-    // Configuración de usuario
+    // Configuraciï¿½n de usuario
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<ProyectoEcommerceContext>()
@@ -54,10 +54,10 @@ builder.Services.AddRazorPages();
 // Registrar servicio del carrito
 builder.Services.AddScoped<ICartService, CartService>();
 
-// CONSTRUCCIÓN DE LA APLICACIÓN
+// CONSTRUCCIï¿½N DE LA APLICACIï¿½N
 var app = builder.Build();
 
-// INICIALIZACIÓN DE BASE DE DATOS Y ROLES
+// INICIALIZACIï¿½N DE BASE DE DATOS Y ROLES
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -71,16 +71,16 @@ using (var scope = app.Services.CreateScope())
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
 
-        // Si tienes un DbInitializer estático que requiere IServiceProvider:
+        // Si tienes un DbInitializer estï¿½tico que requiere IServiceProvider:
         await DbInitializer.Initialize(services);
         Console.WriteLine("Roles y usuario administrador inicializados por DbInitializer");
 
-        // Ejemplo adicional de garantía de existencia de rol/admin (opcional)
+        // Ejemplo adicional de garantï¿½a de existencia de rol/admin (opcional)
         const string ADMIN = "Admin";
         if (!await roleManager.RoleExistsAsync(ADMIN))
             await roleManager.CreateAsync(new IdentityRole(ADMIN));
 
-        var adminEmail = "admin@demo.com";
+        var adminEmail = "admin@demo.com"; //fin
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
         {
@@ -106,7 +106,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// CONFIGURACIÓN DEL PIPELINE HTTP
+// CONFIGURACIï¿½N DEL PIPELINE HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
