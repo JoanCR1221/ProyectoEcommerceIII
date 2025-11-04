@@ -5,7 +5,10 @@ using ProyectoEcommerce.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+<<<<<<< Updated upstream
 //CONFIGURACIÓN DE LA BASE DE DATOS
+=======
+>>>>>>> Stashed changes
 builder.Services.AddDbContext<ProyectoEcommerceContext>(opciones =>
     opciones.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -39,7 +42,22 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 .AddDefaultTokenProviders()
 .AddDefaultUI();
 
+<<<<<<< Updated upstream
 // SERVICIOS ADICIONALES
+=======
+//  CONFIGURACIÓN DE SESIÓN
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.Name = ".ProyectoEcommerce.Session";
+});
+
+builder.Services.AddHttpContextAccessor();
+
+// --- Servicios adicionales ---
+>>>>>>> Stashed changes
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
@@ -56,6 +74,7 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
+<<<<<<< Updated upstream
         // 1. Aplicar migraciones pendientes
         var context = services.GetRequiredService<ProyectoEcommerceContext>();
         await context.Database.MigrateAsync();
@@ -70,6 +89,26 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("Advertencia: Hay cambios pendientes en el modelo. Ejecuta 'dotnet ef migrations add [NombreMigracion]'");
     }
     catch (Exception ex)
+=======
+        db.Database.Migrate();
+    }
+    catch (InvalidOperationException ex) when (ex.Message.Contains("pending changes"))
+    {
+        Console.WriteLine("Advertencia: Hay cambios pendientes en el modelo. Ejecuta 'Add-Migration'.");
+    }
+
+    var roles = sp.GetRequiredService<RoleManager<IdentityRole>>();
+    var users = sp.GetRequiredService<UserManager<IdentityUser>>();
+
+    const string ADMIN = "Admin";
+    if (!await roles.RoleExistsAsync(ADMIN))
+        await roles.CreateAsync(new IdentityRole(ADMIN));
+
+    var email = "admin@demo.com";
+    var pass = "Admin123!";
+    var admin = await users.FindByEmailAsync(email);
+    if (admin == null)
+>>>>>>> Stashed changes
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Error al inicializar la base de datos");
@@ -101,6 +140,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+<<<<<<< Updated upstream
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -108,10 +148,27 @@ app.MapControllerRoute(
     name: "admin",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
+=======
+// USO DE SESIÓN
+app.UseSession();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+// RUTA DEFAULT PRIMERO - ESTO ARREGLA EL PROBLEMA
+>>>>>>> Stashed changes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+<<<<<<< Updated upstream
+=======
+//  RUTA DE ÁREAS DESPUÉS
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+
+>>>>>>> Stashed changes
 app.MapRazorPages();
 
 app.Run();
