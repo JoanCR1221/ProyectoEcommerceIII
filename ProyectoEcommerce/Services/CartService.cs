@@ -9,6 +9,8 @@ namespace ProyectoEcommerce.Services
         private readonly ProyectoEcommerceContext _context;
         public CartService(ProyectoEcommerceContext context) => _context = context;
 
+
+
         public async Task<ShoppingCart?> GetCartByEmailAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email)) return null;

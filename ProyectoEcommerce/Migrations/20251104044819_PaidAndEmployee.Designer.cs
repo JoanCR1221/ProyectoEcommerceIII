@@ -12,8 +12,8 @@ using ProyectoEcommerce.Data;
 namespace ProyectoEcommerce.Migrations
 {
     [DbContext(typeof(ProyectoEcommerceContext))]
-    [Migration("20251103204402_AddBuyPaidAndEmployeeNullable")]
-    partial class AddBuyPaidAndEmployeeNullable
+    [Migration("20251104044819_PaidAndEmployee")]
+    partial class PaidAndEmployee
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,9 +1,11 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoEcommerce.Services;
+using ProyectoEcommerce.Models;
 
 namespace ProyectoEcommerce.ViewComponents
 {
+    [ViewComponent(Name = "CartTodo")]
     public class CartTodoViewComponent : ViewComponent
     {
         private readonly ICartService _cartService;
@@ -12,10 +14,14 @@ namespace ProyectoEcommerce.ViewComponents
         public async Task<IViewComponentResult> InvokeAsync()
         {
             var email = HttpContext?.User?.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(email)) return View(null);
+            ShoppingCart? cart = null;
 
-            var cart = await _cartService.GetCartByEmailAsync(email);
-            return View(cart);
+            if (!string.IsNullOrWhiteSpace(email))
+                cart = await _cartService.GetCartByEmailAsync(email);
+
+            
+            return View("Default", cart);
         }
     }
 }
+

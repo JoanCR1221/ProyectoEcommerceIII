@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ProyectoEcommerce.Models;
 
 namespace ProyectoEcommerce.Services
@@ -9,5 +10,9 @@ namespace ProyectoEcommerce.Services
         Task UpdateQuantityAsync(int cartId, int productId, int quantity);
         Task RemoveItemAsync(int cartId, int productId);
         Task<Buy> CreateBuyFromCartAsync(string email, decimal ivaRate = 0.13m);
+        
+
+     
+
     }
 }

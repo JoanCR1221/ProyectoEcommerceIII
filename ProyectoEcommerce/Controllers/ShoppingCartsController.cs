@@ -57,21 +57,31 @@ namespace ProyectoEcommerce.Controllers
         public async Task<IActionResult> AddToCart(int productId, int quantity = 1, string returnUrl = null)
         {
             var email = User?.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(email)) return Challenge();
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                // Redirigir explícitamente al login con returnUrl
+                return RedirectToPage("/Account/Login", new
+                {
+                    area = "Identity",
+                    returnUrl = returnUrl ?? Url.Action("DetailsPublic", "Products", new { id = productId })
+                });
+            }
 
             try
             {
                 await _cartService.AddToCartAsync(email, productId, quantity);
+                TempData["Success"] = "Producto agregado al carrito exitosamente";
             }
             catch (InvalidOperationException ex)
             {
                 TempData["Error"] = ex.Message;
             }
 
+            // Redirigir de vuelta a la página del producto
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
-            return RedirectToAction("My");
+            return RedirectToAction("DetailsPublic", "Products", new { id = productId });
         }
 
         // Pagar: delega al servicio que hace la transacción

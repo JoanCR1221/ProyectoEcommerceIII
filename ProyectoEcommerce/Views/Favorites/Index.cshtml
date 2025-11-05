@@ -92,18 +92,34 @@
                                         </div>
                                     }
 
+                                    <!-- Botones Dentro de la lista de Favoritos -->
+
                                     <div class="d-grid gap-2 mt-auto">
                                         <a href="/Products/DetailsPublic/@product.Id"
                                            class="btn btn-outline-primary btn-sm">
                                             <i class="fas fa-eye me-1"></i>Ver Detalles
                                         </a>
 
+
                                         @if (product.Available && product.Stock > 0)
                                         {
-                                            <button class="btn btn-primary btn-sm add-to-cart"
-                                                    data-product-id="@product.Id">
-                                                <i class="fas fa-cart-plus me-1"></i>Agregar al Carrito
-                                            </button>
+                                            <form asp-controller="ShoppingCarts" asp-action="AddToCart"
+                                                  method="post" class="add-to-cart-form m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="productId" value="@product.Id" />
+                                                <input type="hidden" name="quantity" value="1" />
+                                                <input type="hidden" name="returnUrl"
+                                                       value="@Url.Action("Index", "Favorites")" />
+
+                                                <button type="submit" class="btn btn-primary btn-sm w-100 add-to-cart-btn">
+                                                    <span class="button-text">
+                                                        <i class="fas fa-cart-plus me-1"></i>Agregar al Carrito
+                                                    </span>
+                                                    <span class="spinner-border spinner-border-sm d-none" role="status">
+                                                        <span class="visually-hidden">Cargando...</span>
+                                                    </span>
+                                                </button>
+                                            </form>
                                         }
 
                                      
