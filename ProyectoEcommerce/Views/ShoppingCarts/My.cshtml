@@ -10,6 +10,11 @@
         NumberGroupSeparator = ",",
         NumberDecimalSeparator = "."
     };
+
+    var subtotal = Model?.Items.Sum(i => i.Quantity * (i.Product?.Price ?? 0m)) ?? 0m;
+    var ivaRate = 0.13m;
+    var iva = Math.Round(subtotal * ivaRate, 2);
+    var total = subtotal + iva;
 }
 
 <h2>Mi carrito</h2>
@@ -89,13 +94,6 @@ else
         </tbody>
     </table>
 
-
-    var subtotal = Model.Items.Sum(i => i.Quantity * (i.Product?.Price ?? 0m));
-    var ivaRate = 0.13m;
-    var iva = Math.Round(subtotal * ivaRate, 2);
-    var total = subtotal + iva;
-
-
     <div class="row">
         <div class="col-md-6">
             <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Seguir comprando</a>
@@ -103,19 +101,74 @@ else
         <div class="col-md-6 text-end">
             <dl class="row justify-content-end">
                 <dt class="col-4">Subtotal:</dt>
-                <dd class="col-4">₡@subtotal.ToString("N0", customFormat)</dd>
+                <dd class="col-4 text-end">₡@subtotal.ToString("N0", customFormat)</dd>
 
-                <dt class="col-4">IVA (@(ivaRate * 100) %):</dt>
-                <dd class="col-4">₡@iva.ToString("N0", customFormat)</dd>
+                <dt class="col-4">IVA (@(ivaRate * 100)%)</dt>
+                <dd class="col-4 text-end">₡@iva.ToString("N0", customFormat)</dd>
 
                 <dt class="col-4 h5">Total:</dt>
-                <dd class="col-4 h5">₡@total.ToString("N0", customFormat)</dd>
+                <dd class="col-4 h5 text-end">₡@total.ToString("N0", customFormat)</dd>
             </dl>
 
-            <form asp-controller="ShoppingCarts" asp-action="Pay" method="post" class="d-inline">
+            <form id="payForm" asp-controller="ShoppingCarts" asp-action="Pay" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-success btn-lg">Pagar</button>
+                <button type="button" id="btnPay" class="btn btn-success btn-lg">Pagar</button>
             </form>
         </div>
     </div>
+}
+
+<!-- Modal de confirmación antes de pagar -->
+<div class="modal fade" id="confirmPayModal" tabindex="-1" aria-labelledby="confirmPayLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmPayLabel">Confirmar compra</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Vas a realizar el pago por el siguiente monto:</p>
+        <ul class="list-unstyled">
+            <li>Subtotal: <strong id="confirmSubtotal">₡@subtotal.ToString("N0", customFormat)</strong></li>
+            <li>IVA (@(ivaRate * 100)%): <strong id="confirmIva">₡@iva.ToString("N0", customFormat)</strong></li>
+            <li>Total: <strong id="confirmTotal">₡@total.ToString("N0", customFormat)</strong></li>
+        </ul>
+        <p class="text-muted small mb-0">¿Deseas continuar y procesar el pago?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="confirmPayBtn" class="btn btn-success">Confirmar y pagar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const btnPay = document.getElementById('btnPay');
+            const confirmModalEl = document.getElementById('confirmPayModal');
+            const confirmModal = new bootstrap.Modal(confirmModalEl);
+            const confirmPayBtn = document.getElementById('confirmPayBtn');
+            const payForm = document.getElementById('payForm');
+
+            btnPay?.addEventListener('click', function () {
+                confirmModal.show();
+            });
+
+            confirmPayBtn?.addEventListener('click', function () {
+                // Feedback visual: deshabilitar botón y mostrar spinner
+                confirmPayBtn.disabled = true;
+                confirmPayBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+                // enviar formulario
+                payForm.submit();
+            });
+
+            // Restaurar estado del botón si se cierra modal (por si el usuario vuelve)
+            confirmModalEl.addEventListener('hidden.bs.modal', function () {
+                confirmPayBtn.disabled = false;
+                confirmPayBtn.innerHTML = 'Confirmar y pagar';
+            });
+        })();
+    </script>
 }
