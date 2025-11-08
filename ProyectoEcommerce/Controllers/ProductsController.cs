@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProyectoEcommerce.Data;
 using ProyectoEcommerce.Models;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
 
 namespace ProyectoEcommerce.Controllers
 {
@@ -13,7 +15,14 @@ namespace ProyectoEcommerce.Controllers
     public class ProductsController : Controller
     {
         private readonly ProyectoEcommerceContext _context;
-        public ProductsController(ProyectoEcommerceContext context) => _context = context;
+        private readonly IWebHostEnvironment _env;
+
+        // Inyectamos IWebHostEnvironment además del contexto
+        public ProductsController(ProyectoEcommerceContext context, IWebHostEnvironment env)
+        {
+            _context = context;
+            _env = env;
+        }
 
         // ========= CATÁLOGO PÚBLICO =========
         [AllowAnonymous]
@@ -43,6 +52,25 @@ namespace ProyectoEcommerce.Controllers
                 .ToListAsync();
 
             return View(data);
+        }
+
+        // Acción que devuelve los nombres de las imágenes de wwwroot/images/products
+        [HttpGet]
+        public IActionResult ListProductImages()
+        {
+            var imagesDir = Path.Combine(_env.WebRootPath ?? "wwwroot", "images", "products");
+
+            if (!Directory.Exists(imagesDir))
+            {
+                return Json(new { success = false, message = "La carpeta images/products no existe.", images = new string[0] });
+            }
+
+            var files = Directory.GetFiles(imagesDir)
+                                 .Select(Path.GetFileName)
+                                 .OrderBy(n => n)
+                                 .ToArray();
+
+            return Json(new { success = true, images = files });
         }
 
         // ========= VISTAS PÚBLICAS =========
