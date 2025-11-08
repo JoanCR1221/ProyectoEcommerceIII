@@ -100,24 +100,32 @@ namespace ProyectoEcommerce.Controllers
         }
 
         // ========= ADMIN (CRUD) =========
-        public async Task<IActionResult> Index(int? categoryId)  
+        public async Task<IActionResult> Index(int? categoryId, string searchTerm)
         {
             var query = _context.Products.Include(p => p.Category).AsQueryable();
 
-            // FILTRAR por categoría..categoryId
             if (categoryId.HasValue && categoryId > 0)
             {
                 query = query.Where(p => p.CategoryId == categoryId.Value);
                 ViewBag.CategoryId = categoryId.Value;
 
-                // Obtener nombre de la categoría para mostrar
                 var category = await _context.Categories
                     .FirstOrDefaultAsync(c => c.CategoryId == categoryId.Value);
                 ViewBag.CategoryName = category?.Name;
             }
 
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.ToLower();
+                query = query.Where(p =>
+                    p.Name.ToLower().Contains(searchTerm) ||
+                    p.Description.ToLower().Contains(searchTerm));
+                ViewBag.CurrentSearch = searchTerm;
+            }
+
             return View(await query.ToListAsync());
         }
+
 
         // GET: Products/Create
         public IActionResult Create()

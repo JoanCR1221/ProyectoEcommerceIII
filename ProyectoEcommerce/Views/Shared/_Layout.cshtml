@@ -30,10 +30,11 @@
             </div>
 
             <!-- BÚSQUEDA - Centrada  -->
-            <div class="search-container d-flex gap-2" style="flex: 1; max-width: 500px; margin: 0 auto;">
-                <input type="text" class="search-bar form-control" placeholder="Buscar productos...">
-                <button class="search-btn btn btn-outline-primary">Buscar</button>
-            </div>
+            <form asp-controller="Products" asp-action="Public" method="get" class="search-container d-flex gap-2" style="flex: 1; max-width: 500px; margin: 0 auto;">
+                <input type="text" name="searchTerm" class="search-bar form-control" placeholder="Buscar productos..." />
+                <button type="submit" class="search-btn btn btn-outline-primary">Buscar</button>
+            </form>
+
 
             <!-- BOTONES - Mismo tamaño y alineados -->
             <div class="header-actions d-flex align-items-center gap-1" style="width: 300px; flex-shrink: 0; justify-content: flex-end;">
