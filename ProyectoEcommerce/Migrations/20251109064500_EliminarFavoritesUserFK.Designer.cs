@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProyectoEcommerce.Data;
 
@@ -11,9 +12,11 @@ using ProyectoEcommerce.Data;
 namespace ProyectoEcommerce.Migrations
 {
     [DbContext(typeof(ProyectoEcommerceContext))]
-    partial class ProyectoEcommerceContextModelSnapshot : ModelSnapshot
+    [Migration("20251109064500_EliminarFavoritesUserFK")]
+    partial class EliminarFavoritesUserFK
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -420,14 +423,9 @@ namespace ProyectoEcommerce.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId1")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("FavoriteId");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("AnonymousId", "ProductId")
                         .HasDatabaseName("IX_Favorites_Anon_Product");
@@ -613,14 +611,10 @@ namespace ProyectoEcommerce.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId1");
 
                     b.Navigation("Product");
 

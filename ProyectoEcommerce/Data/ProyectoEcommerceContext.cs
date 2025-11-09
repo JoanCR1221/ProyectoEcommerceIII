@@ -25,6 +25,9 @@ namespace ProyectoEcommerce.Data
         public DbSet<Faq> Faqs { get; set; }
         public DbSet<BuyItem> BuyItems { get; set; }
 
+        // Nuevo DbSet para favoritos persistentes
+        public DbSet<Favorite> Favorites { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -89,9 +92,28 @@ namespace ProyectoEcommerce.Data
             // Índice compuesto para Faq (ok)
             modelBuilder.Entity<Faq>()
                 .HasIndex(f => new { f.Category, f.SortOrder });
+
+            // --- FAVORITES: persistencia para usuarios y anónimos ---
+            modelBuilder.Entity<Favorite>(entity =>
+            {
+                entity.HasKey(f => f.FavoriteId);
+
+                // índices para consultas rápidas
+                entity.HasIndex(f => new { f.UserId, f.ProductId }).HasDatabaseName("IX_Favorites_User_Product");
+                entity.HasIndex(f => new { f.AnonymousId, f.ProductId }).HasDatabaseName("IX_Favorites_Anon_Product");
+
+                entity.HasOne(f => f.Product)
+                      .WithMany()
+                      .HasForeignKey(f => f.ProductId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // relación opcional con IdentityUser
+                entity.HasOne<IdentityUser>()
+                      .WithMany()
+                      .HasForeignKey(f => f.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
-       // public DbSet<ProyectoEcommerce.Models.Favorite> Favorite { get; set; }
     }
 }
-
 
