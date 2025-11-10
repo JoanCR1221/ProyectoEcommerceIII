@@ -28,19 +28,19 @@ namespace ProyectoEcommerce.Controllers
 
         // ========= CATÁLOGO PÚBLICO =========
         [AllowAnonymous]
-        public async Task<IActionResult> Public(string q = null, int? categoryId = null)
+        public async Task<IActionResult> Public(string searchTerm = null, int? categoryId = null)
         {
             var query = _context.Products
                 .Include(p => p.Category)
                 .Where(p => p.Available && p.Stock > 0) // Solo disponibles con stock
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(q))
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                q = q.ToLower();
+                searchTerm = searchTerm.ToLower();
                 query = query.Where(p =>
-                    p.Name.ToLower().Contains(q) ||
-                    p.Description.ToLower().Contains(q));
+                    p.Name.ToLower().Contains(searchTerm) ||
+                    p.Description.ToLower().Contains(searchTerm));
             }
 
             if (categoryId.HasValue)
@@ -54,11 +54,11 @@ namespace ProyectoEcommerce.Controllers
                 .ToListAsync();
 
             // --- Destacados: los más visitados (top 6) ---
-            var minViews = 1;
-            var cutoff = DateTime.UtcNow.AddHours(-24);
+           // var minViews = 1;
+           // var cutoff = DateTime.UtcNow.AddHours(-24);
 
             // 1) Productos marcados por admin
-            var featuredManual = await _context.Products
+           /* var featuredManual = await _context.Products
                 .Include(p => p.Category)
                 .Where(p => p.Available && p.Stock > 0 && p.IsFeatured)
                 .OrderByDescending(p => p.CreatedAt)
@@ -83,7 +83,7 @@ namespace ProyectoEcommerce.Controllers
             }
 
             var destacados = featuredManual.Concat(featuredAuto).Take(6).ToList();
-            ViewBag.TopViewed = destacados;
+            ViewBag.TopViewed = destacados;*/
 
             return View(data);
         }

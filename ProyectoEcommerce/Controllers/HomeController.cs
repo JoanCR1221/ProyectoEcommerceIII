@@ -20,15 +20,17 @@ namespace ProyectoEcommerce.Controllers
         // GET: Home/Index
         public async Task<IActionResult> Index()
         {
-            // Ejemplo: mostrar hasta 8 productos disponibles ordenados por Id descendente (ajusta según necesites)
-            var productos = await _context.Products
-                                 .Where(p => p.Available)          // opcional: solo disponibles
-                                 .OrderByDescending(p => p.Id)
-                                 .Take(8)
-                                 .ToListAsync();
+            // Mouestra 9 productos destacados, disponibles y con stock
+            var productosDestacados = await _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.Available && p.Stock > 0 && p.IsFeatured)
+                .OrderByDescending(p => p.CreatedAt) // más recientes primero
+                .Take(9)
+                .ToListAsync();
 
-            return View(productos); // la vista recibirá IEnumerable<Product>
+            return View(productosDestacados); // la vista recibirá IEnumerable<Product>
         }
+
 
         public IActionResult Privacy() => View();
         public IActionResult LegalInformation() => View();
