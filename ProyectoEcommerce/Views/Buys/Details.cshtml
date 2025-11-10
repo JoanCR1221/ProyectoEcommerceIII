@@ -33,7 +33,7 @@
                     <small class="text-muted">ID: @Model.BuyId</small>
                 </div>
                 <div class="text-end">
-                    <img src="~/images/Logos/FacturaLogo.png" alt="Logo" style="height:48px;" onerror="this.style.display='none'"/>
+                    <img src="~/images/Logos/FacturaLogo.png" alt="Logo" style="height:48px;" onerror="this.style.display='none'" />
                     <div class="small text-muted">Fecha: @dateFormatted</div>
                 </div>
             </div>
@@ -122,12 +122,10 @@
                     </dl>
 
                     <div class="d-flex gap-2">
-                        <a class="btn btn-outline-secondary" asp-action="Index">Volver</a>
+                        <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Volver</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-
