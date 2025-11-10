@@ -214,7 +214,7 @@ namespace ProyectoEcommerce.Controllers
                 ViewBag.CurrentSearch = searchTerm;
             }
 
-            return View(await query.ToListAsync());
+            return View(await query.OrderBy(p => p.Name).ToListAsync());//Ordena alfabeticamente al crear el producto
         }
 
 
