@@ -98,20 +98,30 @@ namespace ProyectoEcommerce.Data
             {
                 entity.HasKey(f => f.FavoriteId);
 
-                // índices para consultas rápidas
-                entity.HasIndex(f => new { f.UserId, f.ProductId }).HasDatabaseName("IX_Favorites_User_Product");
-                entity.HasIndex(f => new { f.AnonymousId, f.ProductId }).HasDatabaseName("IX_Favorites_Anon_Product");
+                // Propiedades
+                entity.Property(f => f.UserId)
+                      .HasMaxLength(450)   // coincide con AspNetUsers PK nvarchar(450)
+                      .IsRequired(false);
 
+                entity.Property(f => f.AnonymousId)
+                      .HasMaxLength(450)
+                      .IsRequired(false);
+
+                // Mapear navegación User -> FK UserId (evita UserId1)
+                entity.HasOne(f => f.User)
+                      .WithMany()
+                      .HasForeignKey(f => f.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Mapear relación con Product
                 entity.HasOne(f => f.Product)
                       .WithMany()
                       .HasForeignKey(f => f.ProductId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // relación opcional con IdentityUser
-                entity.HasOne<IdentityUser>()
-                      .WithMany()
-                      .HasForeignKey(f => f.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                // Índices útiles
+                entity.HasIndex(f => new { f.AnonymousId, f.ProductId }).HasDatabaseName("IX_Favorites_Anon_Product");
+                entity.HasIndex(f => new { f.UserId, f.ProductId }).HasDatabaseName("IX_Favorites_User_Product");
             });
         }
     }

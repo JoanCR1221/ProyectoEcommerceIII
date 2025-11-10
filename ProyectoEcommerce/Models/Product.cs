@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProyectoEcommerce.Models
 {
@@ -23,8 +24,19 @@ namespace ProyectoEcommerce.Models
         public int CategoryId { get; set; }
         public virtual Category Category { get; set; }
 
+        // contador de vistas
+        public int ViewCount { get; set; } = 0;
+
+        // filtra para no incluir productos creados en las últimas X horas
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        //  para destacados manuales por el admin
+        public bool IsFeatured { get; set; } = false;
+
         // Relaciones
         public ICollection<ShoppingCartItem> ShoppingCartItems { get; set; } = new List<ShoppingCartItem>();
         public ICollection<BuyItem> BuyItems { get; set; } = new List<BuyItem>();
     }
 }
+
+

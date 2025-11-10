@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ using ProyectoEcommerce.Data;
 using ProyectoEcommerce.Models;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace ProyectoEcommerce.Controllers
 {
@@ -51,6 +53,38 @@ namespace ProyectoEcommerce.Controllers
                 .Select(c => new SelectListItem { Value = c.CategoryId.ToString(), Text = c.Name })
                 .ToListAsync();
 
+            // --- Destacados: los más visitados (top 6) ---
+            var minViews = 1;
+            var cutoff = DateTime.UtcNow.AddHours(-24);
+
+            // 1) Productos marcados por admin
+            var featuredManual = await _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.Available && p.Stock > 0 && p.IsFeatured)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            // 2) Completar con más vistos (cumplen umbral y no son muy nuevos)
+            var needed = Math.Max(0, 6 - featuredManual.Count);
+            var featuredAuto = new List<Product>();
+            if (needed > 0)
+            {
+                featuredAuto = await _context.Products
+                    .Include(p => p.Category)
+                    .Where(p => p.Available
+                                && p.Stock > 0
+                                && !p.IsFeatured
+                                && p.ViewCount >= minViews
+                                && p.CreatedAt <= cutoff)
+                    .OrderByDescending(p => p.ViewCount)
+                    .ThenByDescending(p => p.CreatedAt)
+                    .Take(needed)
+                    .ToListAsync();
+            }
+
+            var destacados = featuredManual.Concat(featuredAuto).Take(6).ToList();
+            ViewBag.TopViewed = destacados;
+
             return View(data);
         }
 
@@ -86,6 +120,35 @@ namespace ProyectoEcommerce.Controllers
             if (product == null || (!product.Available && !User.IsInRole("Admin")))
                 return NotFound();
 
+            // ===== Incremento seguro del contador de vistas =====
+            // Evita contar repetidas visitas desde el mismo navegador durante 24h
+            
+            try
+            {
+                var cookieName = $"viewed_{product.Id}";
+                if (!Request.Cookies.ContainsKey(cookieName))
+                {
+                    // Incremento atómico en la BD
+                    await _context.Database.ExecuteSqlInterpolatedAsync($"UPDATE Products SET ViewCount = ViewCount + 1 WHERE Id = {product.Id}");
+
+                    // Actualizar modelo para mostrar el valor incrementado
+                    product.ViewCount++;
+
+                    var opts = new CookieOptions
+                    {
+                        Expires = DateTimeOffset.UtcNow.AddHours(24),
+                        HttpOnly = true,
+                        IsEssential = true,
+                        SameSite = SameSiteMode.Lax
+                    };
+                    Response.Cookies.Append(cookieName, "1", opts);
+                }
+            }
+            catch
+            {
+                // Si falla el conteo no interrumpimos la vista 
+            }
+
             return View(product);
         }
 
@@ -113,7 +176,7 @@ namespace ProyectoEcommerce.Controllers
         }
 
         // ========= VISTA ADMIN DETAILS  =========
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -165,7 +228,7 @@ namespace ProyectoEcommerce.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price,Available,ImageUrl,Stock,CategoryId")] Product product)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price,Available,ImageUrl,Stock,CategoryId,IsFeatured")] Product product)
         {
             if (!ModelState.IsValid)
             {
@@ -173,6 +236,7 @@ namespace ProyectoEcommerce.Controllers
                 return View(product);
             }
 
+            product.CreatedAt = DateTime.UtcNow; // guarda en UTC
             _context.Add(product);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -193,7 +257,7 @@ namespace ProyectoEcommerce.Controllers
         // POST: Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Available,ImageUrl,Stock,CategoryId")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Available,ImageUrl,Stock,CategoryId,IsFeatured")] Product product)
         {
             if (id != product.Id) return NotFound();
 
