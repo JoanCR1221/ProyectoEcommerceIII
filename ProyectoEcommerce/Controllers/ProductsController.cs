@@ -1,15 +1,16 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using ProyectoEcommerce.Data;
 using ProyectoEcommerce.Models;
-using Microsoft.AspNetCore.Hosting;
+using System;
 using System.IO;
-using Microsoft.AspNetCore.Http;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ProyectoEcommerce.Controllers
 {
@@ -280,17 +281,41 @@ namespace ProyectoEcommerce.Controllers
             return View(product);
         }
 
-        // POST: Products/Delete/5
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var product = await _context.Products.FindAsync(id);
-            if (product != null) _context.Products.Remove(product);
+            if (product == null)
+            {
+                return NotFound();
+            }
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"El producto '{product.Name}' fue eliminado correctamente.";
+            }
+            catch (DbUpdateException ex)
+            {
+                // Si la excepción es por la FK de ShoppingCartItems o BuyItems
+                if (ex.InnerException is SqlException sqlEx &&
+                    (sqlEx.Message.Contains("FK_ShoppingCartItems_Products_ProductId") ||
+                     sqlEx.Message.Contains("FK_BuyItems_Products_ProductId")))
+                {
+                    TempData["ErrorMessage"] = $"El producto '{product.Name}' no se puede eliminar porque está registrado en carritos o compras.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = $"Ocurrió un error al intentar eliminar el producto '{product.Name}'.";
+                }
+            }
+
             return RedirectToAction(nameof(Index));
         }
+
 
         private bool ProductExists(int id) =>
             _context.Products.Any(e => e.Id == id);
