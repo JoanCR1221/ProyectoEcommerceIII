@@ -1,4 +1,5 @@
 ﻿// Funcionalidades para la vista pública de detalles de producto
+// (archivo actualizado: se añadió renderizado de badge de promoción y el handler AJAX que usa /ShoppingCarts/AddAjax)
 
 class ProductDetailsPublic {
     constructor(productId, categoryId) {
@@ -236,11 +237,22 @@ class ProductDetailsPublic {
                 ${products.map(product => `
                     <div class="col-md-3 mb-4">
                         <div class="card h-100 product-card">
-                            <img src="${product.imageUrl ? product.imageUrl.replace('~/', '/') : '/images/no-image.png'}" 
-                                 class="card-img-top" 
-                                 alt="${product.name}"
-                                 style="height: 200px; object-fit: cover;"
-                                 onerror="this.src='/images/no-image.png'">
+                            <div class="position-relative" style="height:200px; overflow:hidden;">
+                                <img src="${product.imageUrl ? product.imageUrl.replace('~/', '/') : '/images/no-image.png'}" 
+                                     class="card-img-top w-100 h-100" 
+                                     alt="${product.name}"
+                                     style="object-fit:cover; display:block;"
+                                     onerror="this.src='/images/no-image.png'">
+                                ${product.promotion ? `
+                                    <div class="badge bg-danger position-absolute" 
+                                         style="top:10px; left:10px; z-index:20; font-weight:700; padding:0.45rem 0.6rem;">
+                                        ${product.promotion.badgeText ?? (product.promotion.discountPercent ? product.promotion.discountPercent + '% OFF' : 'Oferta')}
+                                    </div>
+                                    <div class="position-absolute text-white small" style="bottom:8px; left:10px; z-index:20; background:rgba(0,0,0,0.45); padding:0.25rem 0.4rem; border-radius:4px;">
+                                        Hasta ${new Date(product.promotion.endsAt).toLocaleDateString()}
+                                    </div>
+                                ` : ''}
+                            </div>
                             <div class="card-body d-flex flex-column">
                                 <h6 class="card-title">${product.name}</h6>
                                 <p class="card-text text-primary fw-bold mt-auto">₡${product.price.toLocaleString('en-US')}</p>
@@ -397,35 +409,31 @@ document.addEventListener('DOMContentLoaded', function () {
             spinner.classList.remove('d-none');
 
             try {
-                // Delay de 1.5 segundos
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                await new Promise(resolve => setTimeout(resolve, 600));
 
-                // Obtener el token anti-forgery
-                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                // Obtener token antiforgery: intenta input oculto, luego meta
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    || document.querySelector('meta[name="RequestVerificationToken"]')?.getAttribute('content') || '';
 
-                const response = await fetch('/ShoppingCarts/AddToCart', {
+                const response = await fetch('/ShoppingCarts/AddAjax', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'RequestVerificationToken': token
                     },
-                    body: JSON.stringify({
-                        productId: parseInt(productId),
-                        quantity: 1
-                    })
+                    body: JSON.stringify({ productId: parseInt(productId, 10), quantity: 1 })
                 });
 
-                if (response.ok) {
+                if (!response.ok) throw new Error('Respuesta no OK del servidor');
+
+                const result = await response.json();
+                if (result.success) {
                     buttonText.innerHTML = '<i class="fas fa-check me-1"></i>¡Agregado!';
                     spinner.classList.add('d-none');
-                    
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    setTimeout(() => window.location.reload(), 900);
                 } else {
-                    throw new Error('Error en la respuesta del servidor');
+                    throw new Error(result.message || 'Error al agregar al carrito');
                 }
-
             } catch (error) {
                 console.error('Error:', error);
                 buttonText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';

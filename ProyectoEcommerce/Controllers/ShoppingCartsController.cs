@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ProyectoEcommerce.Data;
 using ProyectoEcommerce.Models;
 using ProyectoEcommerce.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace ProyectoEcommerce.Controllers
 {
@@ -244,5 +247,68 @@ namespace ProyectoEcommerce.Controllers
 
         private bool ShoppingCartExists(int id)
             => _context.ShoppingCarts.Any(e => e.ShoppingCartId == id);
+
+        // DTO para peticiones AJAX
+        public class AddToCartRequest
+        {
+            public int ProductId { get; set; }
+            public int Quantity { get; set; } = 1;
+            public string? ReturnUrl { get; set; }
+        }
+
+        private class AnonCartItem
+        {
+            public int ProductId { get; set; }
+            public int Quantity { get; set; }
+        }
+
+        // Endpoint AJAX que acepta JSON y soporta usuarios anónimos guardando en Session
+        [HttpPost]
+        [Route("ShoppingCarts/AddAjax")]
+        [ValidateAntiForgeryToken]
+        [AllowAnonymous]
+        public async Task<IActionResult> AddAjax([FromBody] AddToCartRequest req)
+        {
+            if (req == null || req.ProductId <= 0) return BadRequest(new { success = false, message = "Parámetros inválidos" });
+
+            var email = User?.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                // Usuario anónimo -> almacenar en sesión
+                try
+                {
+                    var json = HttpContext.Session.GetString("AnonCart") ?? "[]";
+                    var list = JsonSerializer.Deserialize<List<AnonCartItem>>(json) ?? new List<AnonCartItem>();
+
+                    var item = list.FirstOrDefault(i => i.ProductId == req.ProductId);
+                    if (item == null)
+                        list.Add(new AnonCartItem { ProductId = req.ProductId, Quantity = Math.Max(1, req.Quantity) });
+                    else
+                        item.Quantity += Math.Max(1, req.Quantity);
+
+                    HttpContext.Session.SetString("AnonCart", JsonSerializer.Serialize(list));
+
+                    return Json(new { success = true, anonymous = true, items = list.Count });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "AddAjax (anon) falló");
+                    return Json(new { success = false, message = "Error guardando carrito anónimo" });
+                }
+            }
+            else
+            {
+                try
+                {
+                    await _cartService.AddToCartAsync(email, req.ProductId, Math.Max(1, req.Quantity));
+                    return Json(new { success = true, anonymous = false });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error al agregar al carrito para {Email}", email);
+                    return Json(new { success = false, message = ex.Message });
+                }
+            }
+        }
     }
 }

@@ -68,8 +68,22 @@ else
                         }
                     </td>
                     <td>
-                        <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId">@item.Product?.Name</a>
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="fw-semibold">
+                            @item.Product?.Name
+                        </a>
+
+                        @if (item.Product?.Promotion != null
+                                        && item.Product.Promotion.IsActive
+                                        && item.Product.Promotion.StartDate <= DateTime.UtcNow
+                                        && item.Product.Promotion.EndDate >= DateTime.UtcNow)
+                        {
+                            <div class="badge bg-danger mt-1">
+                                @item.Product.Promotion.BadgeText ??
+                                $"{item.Product.Promotion.DiscountPercent}% OFF"
+                            </div>
+                        }
                     </td>
+
                     <td>₡@((item.Product?.Price ?? 0).ToString("N0", customFormat))</td>
                     <td>
                         <form asp-controller="ShoppingCarts" asp-action="UpdateQuantity" method="post" class="d-flex align-items-center">
@@ -172,3 +186,5 @@ else
         })();
     </script>
 }
+
+   

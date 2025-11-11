@@ -3,9 +3,6 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ProyectoEcommerce.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ProyectoEcommerce.Data
 {
@@ -24,9 +21,10 @@ namespace ProyectoEcommerce.Data
         public DbSet<Buy> Buys { get; set; }
         public DbSet<Faq> Faqs { get; set; }
         public DbSet<BuyItem> BuyItems { get; set; }
-
-        // Nuevo DbSet para favoritos persistentes
         public DbSet<Favorite> Favorites { get; set; }
+
+        // Nuevo DbSet para promociones
+        public DbSet<Promotion> Promotions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -119,10 +117,26 @@ namespace ProyectoEcommerce.Data
                       .HasForeignKey(f => f.ProductId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Índices útiles
                 entity.HasIndex(f => new { f.AnonymousId, f.ProductId }).HasDatabaseName("IX_Favorites_Anon_Product");
                 entity.HasIndex(f => new { f.UserId, f.ProductId }).HasDatabaseName("IX_Favorites_User_Product");
             });
+
+            // Promotions mapping
+            modelBuilder.Entity<Promotion>(entity =>
+            {
+                entity.HasKey(p => p.PromotionId);
+                entity.Property(p => p.Name).HasMaxLength(100).IsRequired();
+                entity.Property(p => p.BadgeText).HasMaxLength(50);
+                entity.Property(p => p.DiscountPercent).HasPrecision(5, 2);
+                entity.HasIndex(p => new { p.StartDate, p.EndDate });
+            });
+
+            // Product -> Promotion (optional)
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Promotion)
+                .WithMany(pr => pr.Products)
+                .HasForeignKey(p => p.PromotionId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

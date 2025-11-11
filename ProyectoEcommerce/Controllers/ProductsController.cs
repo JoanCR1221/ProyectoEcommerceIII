@@ -35,6 +35,7 @@ namespace ProyectoEcommerce.Controllers
         {
             var query = _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.Promotion) // <-- incluir promoción
                 .Where(p => p.Available && p.Stock > 0)
                 .AsQueryable();
 
@@ -97,6 +98,7 @@ namespace ProyectoEcommerce.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.Promotion) // <-- incluir promoción
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (product == null || (!product.Available && !User.IsInRole("Admin")))
@@ -210,21 +212,26 @@ namespace ProyectoEcommerce.Controllers
         public IActionResult Create()
         {
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
+            // Lista de promociones (solo activas o todas según lo quieras)
+            ViewData["PromotionId"] = new SelectList(_context.Promotions
+                .OrderByDescending(p => p.StartDate)
+                .Select(p => new { p.PromotionId, p.Name }), "PromotionId", "Name");
             return View();
         }
 
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price,Available,ImageUrl,Stock,CategoryId,IsFeatured")] Product product)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price,Available,ImageUrl,Stock,CategoryId,IsFeatured,PromotionId")] Product product)
         {
             if (!ModelState.IsValid)
             {
                 ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
+                ViewData["PromotionId"] = new SelectList(_context.Promotions.OrderByDescending(p => p.StartDate).Select(p => new { p.PromotionId, p.Name }), "PromotionId", "Name", product.PromotionId);
                 return View(product);
             }
 
-            product.CreatedAt = DateTime.UtcNow; // guarda en UTC
+            product.CreatedAt = DateTime.UtcNow;
             _context.Add(product);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -239,19 +246,21 @@ namespace ProyectoEcommerce.Controllers
             if (product == null) return NotFound();
 
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
+            ViewData["PromotionId"] = new SelectList(_context.Promotions.OrderByDescending(p => p.StartDate).Select(p => new { p.PromotionId, p.Name }), "PromotionId", "Name", product.PromotionId);
             return View(product);
         }
 
         // POST: Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Available,ImageUrl,Stock,CategoryId,IsFeatured")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Available,ImageUrl,Stock,CategoryId,IsFeatured,PromotionId")] Product product)
         {
             if (id != product.Id) return NotFound();
 
             if (!ModelState.IsValid)
             {
                 ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
+                ViewData["PromotionId"] = new SelectList(_context.Promotions.OrderByDescending(p => p.StartDate).Select(p => new { p.PromotionId, p.Name }), "PromotionId", "Name", product.PromotionId);
                 return View(product);
             }
 

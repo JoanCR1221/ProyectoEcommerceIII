@@ -3,6 +3,9 @@
 @{
     ViewData["Title"] = Model.Name;
     Layout = "_Layout";
+    var now = DateTime.UtcNow;
+    bool promoActive = Model.Promotion != null && Model.Promotion.IsActive && Model.Promotion.StartDate <= now && Model.Promotion.EndDate >= now && Model.Promotion.DiscountPercent > 0;
+    var effectivePrice = Model.CalculateEffectivePrice(now);
 }
 
 <div class="container mt-4">
@@ -20,6 +23,13 @@
                      alt="@Model.Name"
                      style="max-height: 400px; object-fit: cover;"
                      onerror="this.src='@Url.Content("~/images/no-image.png")'" />
+                @* Si hay promoción activa, mostrar badge sobre la imagen *@
+                @if (promoActive)
+                {
+                    <div class="badge bg-danger position-absolute" style="top:20px; left:20px; z-index:20; font-weight:700; padding:0.4rem 0.6rem;">
+                        @(Model.Promotion.BadgeText ?? (Model.Promotion.DiscountPercent > 0 ? $"{Model.Promotion.DiscountPercent}% OFF" : "Oferta"))
+                    </div>
+                }
             </div>
         </div>
 
@@ -44,9 +54,25 @@
 
                 <!-- Precio -->
                 <div class="product-price mb-4">
-                    <span class="h2 text-primary fw-bold">
-                        ₡@Model.Price.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))
-                    </span>
+                    @if (promoActive && effectivePrice < Model.Price)
+                    {
+                        <div>
+                            <span class="h5 text-muted" style="text-decoration: line-through;">
+                                ₡@Model.Price.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))
+                            </span>
+                            <br />
+                            <span class="h2 text-primary fw-bold">
+                                ₡@effectivePrice.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))
+                            </span>
+                            <small class="text-success ms-2">Ahorras ₡@(Math.Round(Model.Price - effectivePrice, 0).ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))) (@Model.Promotion.DiscountPercent %)</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="h2 text-primary fw-bold">
+                            ₡@Model.Price.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))
+                        </span>
+                    }
                 </div>
 
                 <!-- Estado del Stock -->

@@ -98,7 +98,19 @@
                                 <td>
                                     <div class="fw-semibold">@it.Product?.Name</div>
                                     <div class="small text-muted">@it.Product?.Description</div>
+
+                                    @if (it.Product?.Promotion != null
+                                                                    && it.Product.Promotion.IsActive
+                                                                    && it.Product.Promotion.StartDate <= DateTime.UtcNow
+                                                                    && it.Product.Promotion.EndDate >= DateTime.UtcNow)
+                                    {
+                                        <div class="badge bg-danger mt-1">
+                                            @it.Product.Promotion.BadgeText ??
+                                            $"{it.Product.Promotion.DiscountPercent}% OFF"
+                                        </div>
+                                    }
                                 </td>
+
                                 <td class="text-center">@it.Quantity</td>
                                 <td class="text-end">₡@it.UnitPrice.ToString("N0", nf)</td>
                                 <td class="text-end">₡@it.Subtotal.ToString("N0", nf)</td>

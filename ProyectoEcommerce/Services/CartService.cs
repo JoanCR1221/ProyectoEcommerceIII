@@ -116,9 +116,20 @@ namespace ProyectoEcommerce.Services
                 await using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    decimal subtotal = cart.Items.Sum(i => i.Quantity * i.Product.Price);
-                    decimal iva = Math.Round(subtotal * ivaRate, 2);
-                    decimal total = subtotal + iva;
+                    decimal subtotal = 0;
+                    decimal iva = 0;
+                    decimal total = 0;
+
+                    foreach (var ci in cart.Items)
+                    {
+                        // Insertar cuando se calcule el precio unitario para la compra
+                        var product = await _context.Products.Include(p => p.Promotion).FirstOrDefaultAsync(p => p.Id == ci.ProductId);
+                        var unitPrice = product.CalculateEffectivePrice(DateTime.UtcNow);
+                        subtotal += unitPrice * ci.Quantity;
+                    }
+
+                    iva = Math.Round(subtotal * ivaRate, 2);
+                    total = subtotal + iva;
 
                     var buy = new Buy
                     {
@@ -137,13 +148,17 @@ namespace ProyectoEcommerce.Services
                     foreach (var ci in cart.Items)
                     {
                         // Crear BuyItem
+                        var product = await _context.Products.Include(p => p.Promotion).FirstOrDefaultAsync(p => p.Id == ci.ProductId);
+                        var unitPrice = product.CalculateEffectivePrice(DateTime.UtcNow);
+                        var subtotalItem = unitPrice * ci.Quantity;
+
                         _context.BuyItems.Add(new BuyItem
                         {
                             BuyId = buy.BuyId,
                             ProductId = ci.ProductId,
                             Quantity = ci.Quantity,
-                            UnitPrice = ci.Product.Price,
-                            Subtotal = ci.Quantity * ci.Product.Price
+                            UnitPrice = unitPrice,
+                            Subtotal = subtotalItem
                         });
 
                         // Reducir stock de forma segura (volver a cargar producto por si acaso)
