@@ -11,96 +11,112 @@
 <main class="main-content">
     <h1 class="section-title">Productos Destacados</h1>
 
-    @{
+    @if (Model != null && Model.Any())
+    {
         var grouped = Model.Select((p, index) => new { p, index })
         .GroupBy(x => x.index / 3)
         .ToList();
-    }
 
-    <div class="carousel-wrapper position-relative">
-        <!-- Carrusel -->
-        <div id="destacadosCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
-            <div class="carousel-inner">
-                @for (var i = 0; i < grouped.Count; i++)
-                {
-                    <div class="carousel-item @(i == 0 ? "active" : "")">
-                        <div class="row justify-content-center">
-                            @foreach (var item in grouped[i])
-                            {
-                                <div class="col-md-3">
-                                    <div class="product-card mb-4">
-                                        <a asp-controller="Products" asp-action="DetailsPublic" asp-route-id="@item.p.Id" class="product-link">
-                                            <div class="product-image">
-                                                @{
-                                                    string imgSrc = string.Empty;
-                                                    if (!string.IsNullOrEmpty(item.p.ImageUrl) &&
-                                                    (item.p.ImageUrl.StartsWith("http://") || item.p.ImageUrl.StartsWith("https://")))
-                                                    {
-                                                        imgSrc = item.p.ImageUrl;
-                                                    }
-                                                    else if (!string.IsNullOrEmpty(item.p.ImageUrl))
-                                                    {
-                                                        var localPath = item.p.ImageUrl.StartsWith("~")
-                                                        ? item.p.ImageUrl
-                                                        : (item.p.ImageUrl.StartsWith("/") ? "~" + item.p.ImageUrl : "~/" + item.p.ImageUrl.TrimStart('/'));
-                                                        imgSrc = Url.Content(localPath);
-                                                    }
-                                                    else
-                                                    {
-                                                        imgSrc = Url.Content("~/images/products/placeholder.jpg");
-                                                    }
-                                                }
+        <div class="carousel-wrapper position-relative">
+            <!-- Carrusel -->
+            <div id="destacadosCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
 
-                                                <img src="@imgSrc" alt="@item.p.Name" class="card-img" asp-append-version="true" />
-                                                <div class="product-badge @(item.p.Available ? "available" : "unavailable")">
-                                                    @(item.p.Available ? "Disponible" : "Agotado")
+                <!-- Indicadores -->
+                <div class="carousel-indicators">
+                    @for (var i = 0; i < grouped.Count; i++)
+                    {
+                        <button type="button" data-bs-target="#destacadosCarousel" data-bs-slide-to="@i"
+                                class="@(i == 0 ? "active" : "")"
+                                aria-current="@(i == 0 ? "true" : "false")"
+                                aria-label="Slide @(i + 1)"></button>
+                    }
+                </div>
+
+                <div class="carousel-inner">
+                    @for (var i = 0; i < grouped.Count; i++)
+                    {
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <div class="row justify-content-center">
+                                @foreach (var item in grouped[i])
+                                {
+                                    <div class="col-md-3">
+                                        <div class="product-card mb-4">
+                                            <a asp-controller="Products" asp-action="DetailsPublic" asp-route-id="@item.p.Id" class="product-link">
+                                                <div class="product-image">
+                                                    @{
+                                                        string imgSrc = string.Empty;
+                                                        if (!string.IsNullOrEmpty(item.p.ImageUrl) &&
+                                                        (item.p.ImageUrl.StartsWith("http://") || item.p.ImageUrl.StartsWith("https://")))
+                                                        {
+                                                            imgSrc = item.p.ImageUrl;
+                                                        }
+                                                        else if (!string.IsNullOrEmpty(item.p.ImageUrl))
+                                                        {
+                                                            var localPath = item.p.ImageUrl.StartsWith("~")
+                                                            ? item.p.ImageUrl
+                                                            : (item.p.ImageUrl.StartsWith("/") ? "~" + item.p.ImageUrl : "~/" + item.p.ImageUrl.TrimStart('/'));
+                                                            imgSrc = Url.Content(localPath);
+                                                        }
+                                                        else
+                                                        {
+                                                            imgSrc = Url.Content("~/images/products/placeholder.jpg");
+                                                        }
+                                                    }
+
+                                                    <img src="@imgSrc" alt="@item.p.Name" class="card-img" asp-append-version="true" loading="lazy" />
+                                                    <div class="product-badge @(item.p.Available ? "available" : "unavailable")">
+                                                        @(item.p.Available ? "Disponible" : "Agotado")
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="product-info-clickable text-center">
-                                                <h3 class="product-name">@item.p.Name</h3>
-                                                <p class="product-availability">
-                                                    @(item.p.Available ? $"En stock ({item.p.Stock} unidades)" : "Sin stock")
-                                                </p>
-                                                <div class="product-price">₡@item.p.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</div>
-                                            </div>
-                                        </a>
+                                                <div class="product-info-clickable text-center">
+                                                    <h3 class="product-name">@item.p.Name</h3>
+                                                    <p class="product-availability">
+                                                        @(item.p.Available ? $"En stock ({item.p.Stock} unidades)" : "Sin stock")
+                                                    </p>
+                                                    <div class="product-price">₡@item.p.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</div>
+                                                </div>
+                                            </a>
 
-                                        <div class="product-actions text-center">
-                                            @if (item.p.Available && item.p.Stock > 0)
-                                            {
-                                                <a asp-controller="Products" asp-action="DetailsPublic" asp-route-id="@item.p.Id" class="buy-btn">
-                                                    Comprar Ahora
-                                                </a>
-                                            }
-                                            else
-                                            {
-                                                <span class="buy-btn disabled">Agotado</span>
-                                            }
+                                            <div class="product-actions text-center">
+                                                @if (item.p.Available && item.p.Stock > 0)
+                                                {
+                                                    <a asp-controller="Products" asp-action="DetailsPublic" asp-route-id="@item.p.Id" class="buy-btn">
+                                                        Comprar Ahora
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="buy-btn disabled">Agotado</span>
+                                                }
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            }
+                                }
+                            </div>
                         </div>
-                    </div>
-                }
+                    }
+                </div>
+            </div>
+
+            <!-- Controles flotantes en capa externa -->
+            <div class="carousel-controls-overlay">
+                <button class="arrow-left" type="button" data-bs-target="#destacadosCarousel" data-bs-slide="prev" aria-label="Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="arrow-right" type="button" data-bs-target="#destacadosCarousel" data-bs-slide="next" aria-label="Siguiente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
-
-        <!-- Controles flotantes en capa externa -->
-        <div class="carousel-controls-overlay">
-            <button class="arrow-left" type="button" data-bs-target="#destacadosCarousel" data-bs-slide="prev">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="arrow-right" type="button" data-bs-target="#destacadosCarousel" data-bs-slide="next">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
-
-    </div>
+    }
+    else
+    {
+        <p class="text-muted">No hay productos destacados para mostrar.</p>
+    }
 </main>
 
-
+<hr class="my-5" />
 
 <img src="~/images/Logos/Whats.png" class="whatsapp-btn" title="Contactar por WhatsApp" />
 
@@ -149,11 +165,3 @@
         </article>
     </div>
 </section>
-
-
-
-
-
-
-
-

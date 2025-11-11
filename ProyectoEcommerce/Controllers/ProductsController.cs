@@ -27,14 +27,17 @@ namespace ProyectoEcommerce.Controllers
         }
 
         // ========= CATÁLOGO PÚBLICO =========
+    
+
         [AllowAnonymous]
         public async Task<IActionResult> Public(string searchTerm = null, int? categoryId = null)
         {
             var query = _context.Products
                 .Include(p => p.Category)
-                .Where(p => p.Available && p.Stock > 0) // Solo disponibles con stock
+                .Where(p => p.Available && p.Stock > 0)
                 .AsQueryable();
 
+            // Filtro por término de búsqueda
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchTerm = searchTerm.ToLower();
@@ -43,50 +46,28 @@ namespace ProyectoEcommerce.Controllers
                     p.Description.ToLower().Contains(searchTerm));
             }
 
+            // Filtro por categoría
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId);
 
+            // Catálogo ordenado alfabéticamente
             var data = await query.OrderBy(p => p.Name).ToListAsync();
 
+            // Categorías para el filtro en la vista
             ViewBag.Categories = await _context.Categories
                 .OrderBy(c => c.Name)
-                .Select(c => new SelectListItem { Value = c.CategoryId.ToString(), Text = c.Name })
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CategoryId.ToString(),
+                    Text = c.Name
+                })
                 .ToListAsync();
 
-            // --- Destacados: los más visitados (top 6) ---
-           // var minViews = 1;
-           // var cutoff = DateTime.UtcNow.AddHours(-24);
-
-            // 1) Productos marcados por admin
-           /* var featuredManual = await _context.Products
-                .Include(p => p.Category)
-                .Where(p => p.Available && p.Stock > 0 && p.IsFeatured)
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
-
-            // 2) Completar con más vistos (cumplen umbral y no son muy nuevos)
-            var needed = Math.Max(0, 6 - featuredManual.Count);
-            var featuredAuto = new List<Product>();
-            if (needed > 0)
-            {
-                featuredAuto = await _context.Products
-                    .Include(p => p.Category)
-                    .Where(p => p.Available
-                                && p.Stock > 0
-                                && !p.IsFeatured
-                                && p.ViewCount >= minViews
-                                && p.CreatedAt <= cutoff)
-                    .OrderByDescending(p => p.ViewCount)
-                    .ThenByDescending(p => p.CreatedAt)
-                    .Take(needed)
-                    .ToListAsync();
-            }
-
-            var destacados = featuredManual.Concat(featuredAuto).Take(6).ToList();
-            ViewBag.TopViewed = destacados;*/
-
-            return View(data);
+            return View(data); // La vista recibe IEnumerable<Product> con el catálogo completo
         }
+
+
+
 
         // Acción que devuelve los nombres de las imágenes de wwwroot/images/products
         [HttpGet]
@@ -136,12 +117,15 @@ namespace ProyectoEcommerce.Controllers
 
                     var opts = new CookieOptions
                     {
-                        Expires = DateTimeOffset.UtcNow.AddHours(24),
+                        Expires = DateTimeOffset.UtcNow.AddMinutes(2),
+                        //Expires = DateTimeOffset.UtcNow.AddHours(2),
+                       // Expires = DateTimeOffset.UtcNow.AddDays(2),
                         HttpOnly = true,
                         IsEssential = true,
                         SameSite = SameSiteMode.Lax
                     };
                     Response.Cookies.Append(cookieName, "1", opts);
+
                 }
             }
             catch
@@ -151,6 +135,9 @@ namespace ProyectoEcommerce.Controllers
 
             return View(product);
         }
+
+
+
 
         [AllowAnonymous]
         [HttpGet]
