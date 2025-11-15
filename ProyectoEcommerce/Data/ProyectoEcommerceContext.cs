@@ -23,6 +23,8 @@ namespace ProyectoEcommerce.Data
         public DbSet<BuyItem> BuyItems { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
 
+        public DbSet<Coupon> Coupons { get; set; }
+
         // Nuevo DbSet para promociones
         public DbSet<Promotion> Promotions { get; set; }
 

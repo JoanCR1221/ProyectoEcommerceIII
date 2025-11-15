@@ -10,6 +10,8 @@
     decimal subtotal = Model.Subtotal;
     decimal iva = Model.IVA;
     decimal total = Model.Total;
+    var discount = Model.DiscountAmount;
+    var couponCode = Model.CouponCode;
     var items = Model.Items ?? Enumerable.Empty<ProyectoEcommerce.Models.BuyItem>();
 }
 
@@ -62,6 +64,14 @@
                             <span class="badge bg-secondary">Pendiente</span>
                         }
                     </div>
+
+                    @if (!string.IsNullOrEmpty(couponCode) && discount > 0)
+                    {
+                        <div class="small mt-1">
+                            Cupón:
+                            <span class="badge bg-info text-dark">@couponCode</span>
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -125,6 +135,12 @@
                     <dl class="row">
                         <dt class="col-6">Subtotal</dt>
                         <dd class="col-6 text-end">₡@subtotal.ToString("N0", nf)</dd>
+
+                        @if (discount > 0 && !string.IsNullOrEmpty(couponCode))
+                        {
+                            <dt class="col-6">Descuento (@couponCode)</dt>
+                            <dd class="col-6 text-end text-success">- ₡@discount.ToString("N0", nf)</dd>
+                        }
 
                         <dt class="col-6">IVA</dt>
                         <dd class="col-6 text-end">₡@iva.ToString("N0", nf)</dd>

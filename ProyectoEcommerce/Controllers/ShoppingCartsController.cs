@@ -101,7 +101,47 @@ namespace ProyectoEcommerce.Controllers
             try
             {
                 _logger.LogInformation("Pay iniciado para {Email}", email);
+
+                // Primero crear la compra normal (sin cupón)
                 var buy = await _cartService.CreateBuyFromCartAsync(email, IVA_RATE);
+
+                // Ver si hay cupón en sesión
+                var couponCode = HttpContext.Session.GetString("CurrentCouponCode");
+                if (!string.IsNullOrWhiteSpace(couponCode))
+                {
+                    var coupon = await _context.Coupons
+                        .FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
+
+                    if (coupon != null)
+                    {
+                        // Recalcular descuento basado en el subtotal de la compra
+                        var buyFromDb = await _context.Buys
+                            .Include(b => b.Items)
+                            .FirstOrDefaultAsync(b => b.BuyId == buy.BuyId);
+
+                        if (buyFromDb != null)
+                        {
+                            var subtotal = buyFromDb.Subtotal;
+
+                            var discount = subtotal * (coupon.DiscountPercent / 100m);
+
+                            if (discount > subtotal)
+                                discount = subtotal;
+
+                            buyFromDb.CouponCode = coupon.Code;
+                            buyFromDb.DiscountAmount = discount;
+
+                            // Restar el descuento al total final
+                            buyFromDb.Total = Math.Max(0, buyFromDb.Total - discount);
+
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    // Limpiar el cupón de la sesión
+                    HttpContext.Session.Remove("CurrentCouponCode");
+                }
+
                 _logger.LogInformation("Pay completado. BuyId={BuyId} para {Email}", buy.BuyId, email);
                 TempData["Success"] = "Pago realizado correctamente.";
                 return RedirectToAction("Details", "Buys", new { id = buy.BuyId });
@@ -119,6 +159,7 @@ namespace ProyectoEcommerce.Controllers
                 return RedirectToAction("My");
             }
         }
+
 
         // Actualiza la cantidad de un item del carrito
         [HttpPost, ValidateAntiForgeryToken]
@@ -310,5 +351,53 @@ namespace ProyectoEcommerce.Controllers
                 }
             }
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApplyCoupon(string code)
+        {
+            var email = User?.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(email))
+                return Challenge();
+
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                TempData["Error"] = "Debe ingresar un código de cupón.";
+                return RedirectToAction("My");
+            }
+
+            code = code.Trim().ToUpper();
+
+            // Obtener carrito del usuario
+            var cart = await _cartService.GetCartByEmailAsync(email);
+            if (cart == null || cart.Items == null || !cart.Items.Any())
+            {
+                TempData["Error"] = "No tiene productos en el carrito.";
+                return RedirectToAction("My");
+            }
+
+            // Buscar cupón
+            var coupon = await _context.Coupons
+                .FirstOrDefaultAsync(c => c.Code == code && c.IsActive);
+
+            if (coupon == null)
+            {
+                TempData["Error"] = "El cupón no existe o está inactivo.";
+                return RedirectToAction("My");
+            }
+
+            var today = DateTime.Today;
+            if (today < coupon.ValidFrom.Date || today > coupon.ValidTo.Date)
+            {
+                TempData["Error"] = "El cupón no está vigente.";
+                return RedirectToAction("My");
+            }
+
+            
+            HttpContext.Session.SetString("CurrentCouponCode", coupon.Code);
+
+            TempData["Success"] = $"Cupón {coupon.Code} aplicado correctamente.";
+            return RedirectToAction("My");
+        }
+
     }
 }

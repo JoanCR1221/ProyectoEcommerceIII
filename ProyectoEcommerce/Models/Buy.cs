@@ -26,6 +26,9 @@ namespace ProyectoEcommerce.Models
         public bool Paid { get; set; }
 
         // Propiedades de navegación
+        public string? CouponCode { get; set; }
+        public decimal DiscountAmount { get; set; }
+
         public virtual Customer Customer { get; set; }
         public virtual Employee Employee { get; set; }
 
