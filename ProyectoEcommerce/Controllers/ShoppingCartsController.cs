@@ -52,6 +52,39 @@ namespace ProyectoEcommerce.Controllers
                 return View(null);
             }
 
+            // Obtener cupón aplicado (si existe) en sesión y validar su vigencia
+            var couponCode = HttpContext.Session.GetString("CurrentCouponCode");
+            decimal? couponPercent = null;
+            if (!string.IsNullOrWhiteSpace(couponCode))
+            {
+                var coupon = await _context.Coupons
+                    .FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
+
+                if (coupon != null)
+                {
+                    var today = DateTime.Today;
+                    if (today >= coupon.ValidFrom.Date && today <= coupon.ValidTo.Date)
+                    {
+                        couponPercent = coupon.DiscountPercent;
+                    }
+                    else
+                    {
+                        // cupón expirado -> limpiar sesión
+                        HttpContext.Session.Remove("CurrentCouponCode");
+                        couponCode = null;
+                    }
+                }
+                else
+                {
+                    // cupón inválido -> limpiar sesión
+                    HttpContext.Session.Remove("CurrentCouponCode");
+                    couponCode = null;
+                }
+            }
+
+            ViewData["CurrentCouponCode"] = couponCode;
+            ViewData["CurrentCouponPercent"] = couponPercent;
+
             return View(cart); // Views/ShoppingCarts/My.cshtml
         }
 
