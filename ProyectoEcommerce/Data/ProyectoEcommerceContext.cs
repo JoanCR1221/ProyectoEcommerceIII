@@ -10,7 +10,9 @@ namespace ProyectoEcommerce.Data
        : IdentityDbContext<IdentityUser, IdentityRole, string>
     {
         public ProyectoEcommerceContext(DbContextOptions<ProyectoEcommerceContext> options)
-            : base(options) { }
+    : base(options)
+        {}
+
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }

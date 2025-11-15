@@ -12,8 +12,8 @@ using ProyectoEcommerce.Data;
 namespace ProyectoEcommerce.Migrations
 {
     [DbContext(typeof(ProyectoEcommerceContext))]
-    [Migration("20251115003551_global")]
-    partial class global
+    [Migration("20251115030318_Global")]
+    partial class Global
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
