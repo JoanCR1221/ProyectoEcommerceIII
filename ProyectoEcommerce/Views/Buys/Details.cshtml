@@ -53,11 +53,13 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <h6 class="mb-1">Datos del cliente</h6>
-                    <div>@(Model.Customer?.Name_full ?? Model.Customer?.Email)</div>
+                   
                     <div class="small text-muted">@Model.Customer?.Email</div>
                     @if (!string.IsNullOrEmpty(Model.Customer?.Email))
                     {
                         <div class="small text-muted mt-1">@Model.Customer.Name_full</div>
+                        <div class="small text-muted mt-1">@Model.Customer.Direccion</div>
+                        <div class="small text-muted mt-1">@Model.Customer.Telefono</div>
                     }
                 </div>
                 <div class="col-md-6 text-md-end">
