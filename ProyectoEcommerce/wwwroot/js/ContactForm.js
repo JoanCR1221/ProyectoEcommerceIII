@@ -26,6 +26,12 @@
         let isValid = true;
         let errorMessage = '';
 
+        // Ignorar campos que no son del formulario (como el token antiforgery)
+        const validFieldNames = ['nombre', 'email', 'telefono', 'mensaje'];
+        if (!validFieldNames.includes(fieldName)) {
+            return true; // No validar campos no reconocidos
+        }
+
         switch (fieldName) {
             case 'nombre':
                 isValid = this.validateNombre(value);
@@ -74,6 +80,11 @@
     showFieldValidation(field, isValid, errorMessage) {
         const errorElement = document.getElementById(field.name + 'Error');
 
+        // Si no existe el elemento de error, no hacer nada (ej: token antiforgery)
+        if (!errorElement) {
+            return;
+        }
+
         if (isValid) {
             field.classList.remove('error');
             field.classList.add('success');
@@ -87,13 +98,17 @@
     }
 
     validateAllFields() {
-        const fields = this.form.querySelectorAll('input, textarea');
+        // Solo validar los campos del formulario, no el token antiforgery
+        const fieldIds = ['nombre', 'email', 'telefono', 'mensaje'];
         let allValid = true;
 
-        fields.forEach(field => {
-            const isFieldValid = this.validateField(field);
-            if (!isFieldValid) {
-                allValid = false;
+        fieldIds.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                const isFieldValid = this.validateField(field);
+                if (!isFieldValid) {
+                    allValid = false;
+                }
             }
         });
 
@@ -108,33 +123,63 @@
             return;
         }
 
-        // Simular envío con el estilo de InnovaTech
+        // Cambiar botón a estado de carga
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<div class="contact-form-loading"></div>Enviando...';
 
         try {
-            // Simular delay de envío
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Obtener token antiforgery
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
-            // Mostrar mensaje de éxito
-            successMessage.style.display = 'block';
-            this.form.reset();
+            if (!token) {
+                throw new Error('Token de seguridad no encontrado');
+            }
 
-            // Limpiar clases de validación
-            const fields = this.form.querySelectorAll('input, textarea');
-            fields.forEach(field => {
-                field.classList.remove('success', 'error');
+            // Preparar datos del formulario
+            const formData = {
+                name: document.getElementById('nombre').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('telefono').value.trim(),
+                message: document.getElementById('mensaje').value.trim()
+            };
+
+            // Enviar datos al servidor
+            const response = await fetch('/Contact/SendMessage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify(formData)
             });
 
-            // Scroll suave hacia el mensaje de éxito
-            successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const result = await response.json();
 
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 5000);
+            if (response.ok && result.success) {
+                // Mostrar mensaje de éxito
+                successMessage.textContent = result.message || '¡Mensaje enviado correctamente! Te contactaremos pronto.';
+                successMessage.style.display = 'block';
+                this.form.reset();
+
+                // Limpiar clases de validación
+                const fields = this.form.querySelectorAll('input, textarea');
+                fields.forEach(field => {
+                    field.classList.remove('success', 'error');
+                });
+
+                // Scroll suave hacia el mensaje de éxito
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 5000);
+            } else {
+                throw new Error(result.message || 'Error al enviar el mensaje');
+            }
 
         } catch (error) {
-            alert('Error al enviar el formulario. Por favor intenta nuevamente.');
+            console.error('Error:', error);
+            alert(error.message || 'Error al enviar el formulario. Por favor intenta nuevamente.');
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Enviar consulta';
