@@ -96,7 +96,7 @@ namespace ProyectoEcommerce.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error agregando producto {ProductId} al carrito del usuario {Email}", productId, email);
-                TempData["Error"] = "No se pudo agregar el producto al carrito.";
+                TempData["Error"] = "Completa tus datos personales en Mi Perfil para poder agregar productos al carrito";
             }
 
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
