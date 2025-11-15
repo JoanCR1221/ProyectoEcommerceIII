@@ -11,6 +11,7 @@ using ProyectoEcommerce.Data;
 using ProyectoEcommerce.Models;
 using ProyectoEcommerce.Services;
 using Microsoft.AspNetCore.Http;
+using ProyectoEcommerce.Services;
 
 namespace ProyectoEcommerce.Controllers
 {
@@ -21,12 +22,14 @@ namespace ProyectoEcommerce.Controllers
         private readonly ICartService _cartService;
         private readonly ILogger<ShoppingCartsController> _logger;
         private const decimal IVA_RATE = 0.13m;
+        private readonly IEmailService _emailService;
 
-        public ShoppingCartsController(ProyectoEcommerceContext context, ICartService cartService, ILogger<ShoppingCartsController> logger)
+        public ShoppingCartsController(ProyectoEcommerceContext context, ICartService cartService, ILogger<ShoppingCartsController> logger,IEmailService emailService)
         {
             _context = context;
             _cartService = cartService;
             _logger = logger;
+            _emailService = emailService;
         }
 
         // ========= MI CARRITO =========
@@ -399,7 +402,12 @@ namespace ProyectoEcommerce.Controllers
                     var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
                     if (coupon != null)
                     {
-                        var buyFromDb = await _context.Buys.Include(b => b.Items).FirstOrDefaultAsync(b => b.BuyId == buy.BuyId);
+                        var buyFromDb = await _context.Buys
+                            .Include(b => b.Items)
+                            .ThenInclude(i => i.Product) // <-- IMPORTANTE: Incluir productos para la factura
+                            .Include(b => b.Customer)     // <-- IMPORTANTE: Incluir cliente para la factura
+                            .FirstOrDefaultAsync(b => b.BuyId == buy.BuyId);
+
                         var subtotal = buyFromDb.Subtotal;
                         var discount = subtotal * (coupon.DiscountPercent / 100m);
                         if (discount > subtotal) discount = subtotal;
@@ -409,16 +417,66 @@ namespace ProyectoEcommerce.Controllers
                         buyFromDb.Total = Math.Max(0, buyFromDb.Total - discount);
 
                         await _context.SaveChangesAsync();
+
+                        buy = buyFromDb; // Actualizar referencia
                     }
 
                     HttpContext.Session.Remove("CurrentCouponCode");
                 }
+                else
+                {
+                    // Si no hay cupón, asegurar que tenemos los datos necesarios
+                    buy = await _context.Buys
+                        .Include(b => b.Items)
+                        .ThenInclude(i => i.Product)
+                        .Include(b => b.Customer)
+                        .FirstOrDefaultAsync(b => b.BuyId == buy.BuyId);
+                }
 
-                TempData["Success"] = "Pago realizado con éxito.";
+                // NUEVO: Enviar factura por email
+                try
+                {
+                    _logger.LogInformation("Intentando enviar factura por email para orden {BuyId} a {Email}", buy.BuyId, email);
+
+                    // Verificar que los datos estén cargados
+                    if (buy.Items == null || !buy.Items.Any())
+                    {
+                        _logger.LogError("Los items de la orden {BuyId} no están cargados antes de enviar el email", buy.BuyId);
+                        throw new InvalidOperationException("Error interno: Los items de la orden no están cargados");
+                    }
+
+                    if (buy.Customer == null)
+                    {
+                        _logger.LogError("El Customer de la orden {BuyId} no está cargado antes de enviar el email", buy.BuyId);
+                        throw new InvalidOperationException("Error interno: El Customer no está cargado");
+                    }
+
+                    await _emailService.SendInvoiceEmailAsync(
+                        buy,
+                        email,
+                        buy.Customer?.Name_full ?? email
+                    );
+
+                    _logger.LogInformation("Factura enviada exitosamente por email para orden {BuyId}", buy.BuyId);
+                    TempData["Success"] = "Pago realizado con éxito. Se ha enviado la factura a tu correo electrónico.";
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogError(emailEx, "Error al enviar email de factura para orden {BuyId}. Detalle: {Message}", buy.BuyId, emailEx.Message);
+
+                    // Mostrar el error real en desarrollo, mensaje genérico en producción
+                    var errorDetail = emailEx.InnerException != null
+                        ? $"{emailEx.Message} - {emailEx.InnerException.Message}"
+                        : emailEx.Message;
+
+                    TempData["Warning"] = $"Pago realizado con éxito. Hubo un problema al enviar el email: {errorDetail}. Puedes descargar tu factura desde los detalles de la compra.";
+                }
+
                 return RedirectToAction("Details", "Buys", new { id = buy.BuyId });
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error procesando pago para {Email}", email);
                 TempData["Error"] = "Error al procesar el pago.";
                 return RedirectToAction("My");
             }
