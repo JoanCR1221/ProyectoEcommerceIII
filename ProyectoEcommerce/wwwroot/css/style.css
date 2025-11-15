@@ -7,18 +7,24 @@
     box-sizing: border-box;
 }
 
+html {
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     color: #1a365d;
     line-height: 1.6;
+    overflow-x: hidden;
+    width: 100%;
 }
 
 /* Header Styles */
 header {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    background: linear-gradient(135deg, #0f1f3d 0%, #1a365d 50%, #2563eb 100%);
     border-bottom: 3px solid #dc2626;
-    box-shadow: 0 4px 12px rgba(26, 54, 93, 0.1);
+    box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
 }
 
 .header-top {
@@ -28,6 +34,7 @@ header {
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 25px;
+    background: linear-gradient(135deg, rgba(26, 54, 93, 0.05) 0%, rgba(220, 38, 38, 0.03) 50%, rgba(255, 255, 255, 0.1) 100%);
 }
 
 .logo {
@@ -140,21 +147,33 @@ header {
     background: linear-gradient(135deg, #1a365d 0%, #2563eb 100%);
     padding: 0 20px;
     border-bottom: 2px solid #dc2626;
+    overflow: visible;
+    position: relative;
+    z-index: 1000;
 }
 
 .nav-container {
     display: flex;
     align-items: center;
     gap: 35px;
+    overflow-x: visible;
+    overflow-y: visible;
+    position: relative;
 }
 
 .categories-dropdown {
     position: relative;
+    z-index: 1010;
+}
+
+.dropdown {
+    position: relative;
+    z-index: 1010;
 }
 
 .categories-btn {
     background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-    border: none;
+    border: 2px solid #dc2626;
     color: white;
     padding: 14px 20px;
     font-size: 14px;
@@ -170,8 +189,9 @@ header {
     .categories-btn:hover {
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         color: #1a365d;
+        border-color: #1a365d;
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.4);
+        box-shadow: 0 4px 15px rgba(26, 54, 93, 0.4);
     }
 
 .dropdown-content {
@@ -186,7 +206,7 @@ header {
     border-radius: 12px;
     z-index: 1000;
     overflow: hidden;
-    margin-top: 2px; /* Peque�o espacio para evitar parpadeo */
+    margin-top: 2px; /* Peque�o espacio para evitar parpadeo */
 }
 
 .categories-dropdown:hover .dropdown-content {
@@ -205,22 +225,12 @@ header {
         top: 100%;
         left: 0;
         right: 0;
-        height: 4px; /* �rea invisible para mantener hover */
+        height: 4px; /* �rea invisible para mantener hover */
         background: transparent;
         z-index: 999;
     }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+/* Animación eliminada - ahora usamos transiciones CSS directamente */
 
 .dropdown-content a {
     display: block;
@@ -493,14 +503,96 @@ header {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
+    /* Ajustes para tablets grandes */
     .header-top {
-        padding: 15px;
         gap: 15px;
     }
 
+    .logo-container {
+        width: 250px !important;
+    }
+
+    .logo img {
+        width: 250px;
+        height: auto;
+    }
+
+    .search-container {
+        max-width: 400px !important;
+    }
+
+    .header-actions {
+        width: 250px !important;
+    }
+}
+
+@media (max-width: 992px) {
+    /* Tablets */
+    .header-top {
+        flex-wrap: wrap;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .logo-container {
+        width: 200px !important;
+        flex-shrink: 0;
+    }
+
+    .logo img {
+        width: 200px;
+        height: auto;
+    }
+
+    .search-container {
+        order: 3;
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .header-actions {
+        width: auto !important;
+        flex-shrink: 1;
+        gap: 8px !important;
+    }
+
+    .header-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-width: 50px !important;
+    }
+
+    .nav-container {
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .nav-link {
+        font-size: 13px;
+        padding: 10px 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-top {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .logo-container {
+        width: 160px !important;
+    }
+
     .logo {
-        font-size: 24px;
+        font-size: 20px;
+    }
+
+    .logo img {
+        width: 160px;
+        height: auto;
     }
 
     .search-container {
@@ -509,25 +601,80 @@ header {
         flex-basis: 100%;
     }
 
-    .nav-container {
-        gap: 20px;
-    }
-
-    .nav-links {
-        gap: 20px;
-    }
-
-    .nav-link {
+    .search-bar {
+        padding: 10px 45px 10px 15px;
         font-size: 14px;
     }
 
+    .search-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .header-actions {
+        gap: 6px !important;
+    }
+
+    .header-btn {
+        padding: 6px 10px;
+        min-width: 45px !important;
+        height: 32px !important;
+    }
+
+    .header-btn i {
+        font-size: 1.1rem !important;
+    }
+
+    /* Navigation responsive */
+    .nav-container {
+        gap: 10px;
+        padding: 8px 10px;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    .nav-container::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .nav-container::-webkit-scrollbar-thumb {
+        background: rgba(220, 38, 38, 0.5);
+        border-radius: 4px;
+    }
+
+    .nav-link {
+        font-size: 12px;
+        padding: 8px 12px;
+        white-space: nowrap;
+    }
+
+    .categories-btn {
+        padding: 10px 15px;
+        font-size: 12px;
+    }
+
+    /* Dropdowns */
+    .dropdown-menu {
+        min-width: 200px !important;
+        font-size: 14px;
+    }
+
+    .dropdown-item {
+        padding: 8px 15px;
+        font-size: 13px;
+    }
+
     .section-title {
-        font-size: 28px;
+        font-size: 24px;
     }
 
     .products-grid {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
     }
 
     .whatsapp-btn {
@@ -539,10 +686,129 @@ header {
     }
 }
 
+@media (max-width: 576px) {
+    /* Móviles */
+    .header-top {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .logo-container {
+        width: 140px !important;
+    }
+
+    .logo img {
+        width: 140px;
+        height: auto;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .header-btn {
+        padding: 5px 8px;
+        min-width: 40px !important;
+        height: 30px !important;
+    }
+
+    .header-btn i {
+        font-size: 1rem !important;
+    }
+
+    /* Ocultar texto de botones en móvil, solo mostrar iconos */
+    .header-btn span:not(.badge) {
+        display: none;
+    }
+
+    .search-bar {
+        padding: 8px 40px 8px 12px;
+        font-size: 13px;
+    }
+
+    .nav-container {
+        gap: 8px;
+        padding: 6px 8px;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-link {
+        font-size: 11px;
+        padding: 6px 10px;
+        white-space: nowrap;
+    }
+
+    .categories-btn {
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+
+    .section-title {
+        font-size: 20px;
+    }
+
+    .products-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .whatsapp-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+        bottom: 15px;
+        right: 15px;
+    }
+
+    /* Footer responsive */
+    .footer .row {
+        text-align: center !important;
+    }
+
+    .footer .col-md-6 {
+        margin-bottom: 15px;
+    }
+
+    .footer a {
+        display: block;
+        margin: 8px 0;
+    }
+}
+
+@media (max-width: 400px) {
+    /* Móviles muy pequeños */
+    .logo-container {
+        width: 120px !important;
+    }
+
+    .logo img {
+        width: 120px;
+        height: auto;
+    }
+
+    .search-bar {
+        font-size: 12px;
+    }
+
+    .nav-link {
+        font-size: 10px;
+        padding: 5px 8px;
+    }
+
+    .products-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+    }
+}
 
 
 
-/* Uniformar altura y est�tica de botones del header */
+
+/* Uniformar altura y est�tica de botones del header */
 .header-top .btn {
     border-radius: 10px;
     font-weight: 600;
@@ -556,3 +822,254 @@ header {
 
 
 
+
+/* ============================================
+   ESTILOS UNIFICADOS PARA TODOS LOS DROPDOWNS
+   ============================================ */
+
+/* Botones de dropdowns - Estilo unificado */
+#accountMenu,
+#adminMenu {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    border: 2px solid #dc2626;
+    color: white !important;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    border-radius: 8px;
+}
+
+    #accountMenu:hover,
+    #adminMenu:hover {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        color: #1a365d !important;
+        border-color: #1a365d;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(26, 54, 93, 0.4);
+    }
+
+/* Menús desplegables de Bootstrap - Estilo mejorado */
+.dropdown-menu {
+    position: absolute !important;
+    top: 100% !important;
+    background: #ffffff;
+    border: 2px solid #dc2626 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 25px rgba(26, 54, 93, 0.2) !important;
+    padding: 0 !important;
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    overflow: visible !important;
+    min-width: 250px !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+    z-index: 10000 !important;
+    opacity: 0;
+    transform: translateY(-3px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    pointer-events: none;
+}
+
+.dropdown-menu.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Header del dropdown */
+.dropdown-menu .dropdown-header {
+    background: linear-gradient(135deg, #1a365d 0%, #2563eb 100%);
+    color: #ffffff !important;
+    font-weight: 700;
+    padding: 12px 18px;
+    border-bottom: 3px solid #dc2626;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Items del dropdown */
+.dropdown-menu .dropdown-item {
+    color: #1a365d;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    border-bottom: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+    .dropdown-menu .dropdown-item:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        color: #ffffff !important;
+        padding-left: 25px;
+        border-radius: 0;
+    }
+
+    .dropdown-menu .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+/* Dividers */
+.dropdown-menu .dropdown-divider {
+    border-top: 2px solid #dc2626;
+    margin: 0;
+    opacity: 0.3;
+}
+
+/* Botón de salir en el dropdown */
+.dropdown-menu form button {
+    transition: all 0.2s ease;
+    font-weight: 600;
+    border: 2px solid #dc2626;
+}
+
+    .dropdown-menu form button:hover {
+        transform: scale(1.02);
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        border-color: #dc2626;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+
+/* ============================================
+   MEDIA QUERIES PARA DROPDOWNS RESPONSIVOS
+   ============================================ */
+
+@media (max-width: 992px) {
+    /* Asegurar que dropdowns no se corten en tablets */
+    .dropdown-menu {
+        position: absolute !important;
+        max-width: calc(100vw - 30px) !important;
+        z-index: 10000 !important;
+    }
+
+    .dropdown-menu.show {
+        transform: translateY(0) !important;
+    }
+
+    /* Dropdowns del lado derecho (cuenta, admin) */
+    .dropdown:not(.categories-dropdown) .dropdown-menu {
+        left: auto !important;
+        right: 0 !important;
+    }
+
+    /* Dropdown de categorías al lado izquierdo */
+    .categories-dropdown .dropdown-menu {
+        left: 0 !important;
+        right: auto !important;
+    }
+
+    .navigation {
+        overflow: visible !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #accountMenu,
+    #adminMenu {
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+
+    .categories-btn {
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+
+    .dropdown-menu {
+        min-width: 220px !important;
+        max-width: calc(100vw - 20px) !important;
+        font-size: 13px;
+        position: absolute !important;
+        margin-top: 4px !important;
+    }
+
+    .dropdown-menu.show {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+
+    .dropdown-menu .dropdown-header {
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+
+    .dropdown-menu .dropdown-item {
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+
+    /* Mantener scroll horizontal pero permitir dropdowns visibles */
+    .navigation {
+        overflow: visible !important;
+        position: relative;
+        z-index: 1000;
+    }
+
+    .nav-container {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        position: relative;
+    }
+
+    /* Asegurar que dropdowns se vean sobre el contenido */
+    .dropdown-menu {
+        z-index: 10000 !important;
+    }
+}
+
+@media (max-width: 576px) {
+    #accountMenu,
+    #adminMenu {
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+
+    .categories-btn {
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+
+    .dropdown-menu {
+        min-width: 200px !important;
+        max-width: calc(100vw - 16px) !important;
+        position: absolute !important;
+        margin-top: 4px !important;
+    }
+
+    .dropdown-menu.show {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+
+    .dropdown-menu .dropdown-item {
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+
+    .dropdown-menu .dropdown-header {
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+
+    /* Mantener scroll horizontal pero permitir dropdowns visibles */
+    .navigation {
+        overflow: visible !important;
+        position: relative;
+        z-index: 1000;
+    }
+
+    .nav-container {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        position: relative;
+    }
+
+    /* Asegurar que dropdowns se vean sobre el contenido */
+    .dropdown-menu {
+        z-index: 10000 !important;
+    }
+}
